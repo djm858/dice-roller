@@ -86,9 +86,8 @@ void mod_each_int_value(int *int_array, int array_length, int modifier)
 }
 
 /*
- * Gets the lowest value in an int array. Because die rolls in RPGs almost
- * universally have a minimum roll value of 1 for any roll, it returns 1 if the
- * lowest value is less than 1.
+ * Gets the lowest value in an int array. Used when the drop_lowest option is
+ * set to true.
  */
 int get_lowest_int(int *int_array, int array_length)
 {
@@ -102,7 +101,26 @@ int get_lowest_int(int *int_array, int array_length)
 		}
 	}
 
-	return maximum(lowest, 1);
+	return lowest;
+}
+
+/*
+ * Gets the highest value in an int array. Used when the drop_highest option is
+ * set to true.
+ */
+int get_highest_int(int *int_array, int array_length)
+{
+	int highest;
+
+	for (int i = 0; i < array_length; i++) {
+		if (i == 0) {
+			highest = int_array[i];
+		} else {
+			highest = maximum(highest, int_array[i]);
+		}
+	}
+
+	return highest;
 }
 
 /*
@@ -158,8 +176,9 @@ float get_dice_avg_base(roll_dice_base_arg_t arg)
  * an overall modifier (ie, Strength modifier on a damage roll), and a
  * multiplier (ie 1d6*10). It also allows for optional arguments such as
  * maximizing the roll (ie, monsters with max health or critical damage rolls in
- * some rulesets), and dropping the lowest value (ie, 4d6 drop lowest for
- * determining stats).
+ * some rulesets), dropping the lowest value (ie, 4d6 drop lowest for
+ * determining stats, or rolling with advantage), and dropping the highest
+ * value (ie, rolling with disadvantage).
  */
 int roll_dice_base(roll_dice_base_arg_t arg)
 {
@@ -175,9 +194,14 @@ int roll_dice_base(roll_dice_base_arg_t arg)
 
 	int total_roll = sum_int_array(die_array, arg.number_of_dice);
 
-	if (arg.drop_lowest) {
+	if (arg.drop == LOWEST) {
 		int lowest = get_lowest_int(die_array, arg.number_of_dice);
 		total_roll -= lowest;
+	}
+
+	if (arg.drop == HIGHEST) {
+		int highest = get_highest_int(die_array, arg.number_of_dice);
+		total_roll -= highest;
 	}
 
 	free(die_array); die_array = NULL;
