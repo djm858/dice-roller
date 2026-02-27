@@ -1,0 +1,12 @@
+#pragma once
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <regex.h>
+
+bool is_present();
+void replace_once();
+void replace();
+char *extract();
