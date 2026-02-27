@@ -33,10 +33,13 @@ int roll_die(int size_of_die)
  */
 bool test_odds(int x, int y)
 {
-	if (roll_die(y) <= x) {
+	int roll = roll_die(y);
+	if (roll <= x) {
+		printf("You have succeeded with a roll of %d!\n", roll);
 		return true;
 	}
 
+	printf("You have failed with a roll of %d.\n", roll);
 	return false;
 }
 
@@ -59,7 +62,6 @@ int *roll_die_array(int number_of_dice, int size_of_dice)
 	for (int i = 0; i < number_of_dice; i++) {
 		die_array[i] = roll_die(size_of_dice);
 	}
-
 	return die_array;
 }
 

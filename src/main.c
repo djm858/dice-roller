@@ -14,20 +14,19 @@ int main(int argc, char *argv[])
 
 	char pattern_x_in_y[] = "^([[:digit:]]+)-in-([[:digit:]]+)$";
 	char pattern_percent[] = "^([[:digit:]]+)%$";
-	char pattern[] = "([[:digit:]]+)?"
+	char pattern[] = "^([[:digit:]]+)?"
 	                 "(d(%|[[:digit:]]+))?"
 	                 "([:+-:][[:digit:]]+)?"
 	                 "(([:*:]|×|x)([[:digit:]]+))?"
-	                 "([:*:]+)?";
+	                 "([:*:]+)?$";
 
 	char *roll_exp = argv[1];
-	if (is_present(pattern_percent, roll_exp) | is_present(pattern_x_in_y, roll_exp)) {
-		if (is_successful(roll_exp)) {
-			printf("You have succeeded!\n");
-		} else {
-			printf("You have failed!\n");
-		}
-	} else if (is_present(pattern, roll_exp)) {
-		printf("You rolled a %d\n", roll_dice(.roll_exp = roll_exp));
+	if (is_present(pattern, roll_exp)) {
+		printf("Rolling %s...\n", roll_exp);
+		printf("You rolled %d.\n", roll_dice(.roll_exp = roll_exp));
+	} else if (is_present(pattern_percent, roll_exp) |
+		   is_present(pattern_x_in_y, roll_exp)) {
+		printf("Testing %s...\n", roll_exp);
+		is_successful(roll_exp);
 	}
 }
