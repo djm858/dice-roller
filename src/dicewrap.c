@@ -131,12 +131,12 @@ bool is_successful(char *odds)
 		free(x_s); x_s = NULL;
 		free(y_s); y_s = NULL;
 	} else if (is_present(pattern_percent, odds)) {
-		char *y_s = extract(odds, pattern_percent, 1);
+		char *x_s = extract(odds, pattern_percent, 1);
 
-		x = 100;
-		y = atoi(y_s);
+		x = atoi(x_s);
+		y = 100;
 
-		free(y_s); y_s = NULL;
+		free(x_s); x_s = NULL;
 	} else {
 		printf("Invalid input for is_successful");
 		exit(EXIT_FAILURE);
