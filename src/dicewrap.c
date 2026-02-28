@@ -5,27 +5,21 @@
  * will use the rgx.c functions to parse the string and assign the appropriate
  * extracted numbers to the underlying base roll_dice args to be used by the
  * dice.c functions. It also allows the user to write 'd%' and it will interpret
- * it as a d100 roll. Finally, some old school RPGs utilize asterisks in Hit
- * Dice expressions (ie 3**) to denote special abilities. This function can find
- * and count those asterisks.
+ * it as a d100 roll.
  */
 roll_dice_base_arg_t get_dice_args(roll_dice_arg_t roll)
 {
 	roll.roll_exp = roll.roll_exp
 		? roll.roll_exp
 		: "1d6";
-	roll.size_of_dice = roll.size_of_dice
-		? roll.size_of_dice
-		: 6;
 	roll.mod_ea_die = roll.mod_ea_die ?
 		roll.mod_ea_die
 		: 0;
 	
 	char pattern[] = "([[:digit:]]+)?"
-	                 "(d(%|[[:digit:]]+))?"
+	                 "(d(%|[[:digit:]]+))"
 	                 "([:+-:][[:digit:]]+)?"
-	                 "(([:*:]|×|x)([[:digit:]]+))?"
-	                 "([:*:]+)?";
+	                 "(([:*:]|×|x)([[:digit:]]+))?";
 
 	char *roll_exp = strdup(roll.roll_exp);
 	replace("–", "-", &roll_exp);
@@ -38,7 +32,7 @@ roll_dice_base_arg_t get_dice_args(roll_dice_arg_t roll)
 		free(number_of_dice_s); number_of_dice_s = NULL;
 	}
 
-	int size_of_dice = roll.size_of_dice;
+	int size_of_dice;
 	char *size_of_dice_s = extract(roll_exp, pattern, 3);
 	if (size_of_dice_s) {
 		if (!strcmp(size_of_dice_s, "%")) {
@@ -47,10 +41,6 @@ roll_dice_base_arg_t get_dice_args(roll_dice_arg_t roll)
 			size_of_dice = atoi(size_of_dice_s);
 		}
 		free(size_of_dice_s); size_of_dice_s = NULL;
-	}
-
-	if (strstr(roll_exp, "½") != NULL) {
-			size_of_dice = size_of_dice / 2;
 	}
 
 	int mod_total = 0;

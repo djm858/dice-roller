@@ -13,7 +13,6 @@
 
 typedef struct roll_dice_arg{
 	char* roll_exp;
-	int size_of_dice;
 	int mod_ea_die;
 	enum drop_type drop;
 	bool maximize_roll;
