@@ -69,17 +69,14 @@ roll_dice_base_arg_t get_dice_args(roll_dice_arg_t roll)
 
 	free(roll_exp); roll_exp = NULL;
 
-	int mod_ea_die = 0;
-	bool maximize_roll = false;
-
 	roll_dice_base_arg_t arg = {
 		.number_of_dice = number_of_dice,
 		.size_of_dice = size_of_dice,
 		.mod_total = mod_total,
-		.mod_ea_die = mod_ea_die,
+		.mod_ea_die = roll.mod_ea_die,
 		.mult = mult,
-		.maximize_roll = maximize_roll,
-		.drop = NONE
+		.maximize_roll = roll.maximize_roll,
+		.drop = roll.drop
 	};
 
 	return arg;
