@@ -13,7 +13,9 @@ void print_err(char *program_name)
 
 int main(int argc, char *argv[])
 {
-	srand(time(NULL));
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	srand(ts.tv_nsec ^ getpid());
 
 	int opt;
 	int mod_ea_die = 0;

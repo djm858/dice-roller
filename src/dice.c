@@ -17,7 +17,9 @@ int maximum(int x, int y)
 }
 
 /*
- * Mimics a die roll. For example, a six-sided would have size_of_die = 6.
+ * Mimics a die roll. For example, a six-sided would have size_of_die = 6. I'm
+ * learning that this may be biased towards lower numbers? Consider researching
+ * and implementing a non-biased fuction.
  */
 int roll_die(int size_of_die)
 {
