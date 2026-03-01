@@ -156,7 +156,7 @@ int sum_int_array(int *int_array, int array_length)
 /*
  * Calculates the average roll value from a given set of arguments.
  */
-float get_dice_avg_base(roll_dice_base_arg_t arg)
+float get_dice_avg(roll_dice_arg_t arg)
 {
 	float average;
 	
@@ -184,7 +184,7 @@ float get_dice_avg_base(roll_dice_base_arg_t arg)
  * determining stats, or rolling with advantage), and dropping the highest
  * value (ie, rolling with disadvantage).
  */
-int roll_dice_base(roll_dice_base_arg_t arg)
+int roll_dice(roll_dice_arg_t arg)
 {
 	int *die_array = roll_die_array(arg.number_of_dice, arg.size_of_dice);
 
@@ -201,9 +201,7 @@ int roll_dice_base(roll_dice_base_arg_t arg)
 	if (arg.drop == LOWEST) {
 		int lowest = get_lowest_int(die_array, arg.number_of_dice);
 		total_roll -= lowest;
-	}
-
-	if (arg.drop == HIGHEST) {
+	} else if (arg.drop == HIGHEST) {
 		int highest = get_highest_int(die_array, arg.number_of_dice);
 		total_roll -= highest;
 	}

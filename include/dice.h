@@ -10,7 +10,7 @@ enum drop_type {
 	HIGHEST
 };
 
-typedef struct roll_dice_base_arg{
+typedef struct roll_dice_arg{
 	int number_of_dice;
 	int size_of_dice;
 	int mod_total;
@@ -18,11 +18,11 @@ typedef struct roll_dice_base_arg{
 	int mult;
 	bool maximize_roll;
 	enum drop_type drop;
-} roll_dice_base_arg_t;
+} roll_dice_arg_t;
 
 int minimum();
 int maximum();
 int roll_die();
 bool test_odds();
-float get_dice_avg_base();
-int roll_dice_base();
+float get_dice_avg();
+int roll_dice();

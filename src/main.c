@@ -6,7 +6,7 @@
 
 void print_err(char *program_name)
 {
-	char *msg = "Usage: %s [-a] [-d] [-m mod_ea_die] [-u] [-v] 'roll_exp'\n";
+	char *msg = "Usage: %s [-a or d] [-m mod_ea_die] [-u] [-v] 'roll_exp'\n";
 	fprintf(stderr, msg, program_name);
 	exit(EXIT_FAILURE);
 }
@@ -26,13 +26,22 @@ int main(int argc, char *argv[])
 	while ((opt = getopt(argc, argv, ":adm:u")) != -1) {
 		switch (opt) {
 			case 'a':
+				if (drop != NONE) {
+					printf("Only one instance of a 'drop' argument allowed.\n");
+					print_err(argv[0]);
+				}
 				drop = LOWEST;
 				break;
 			case 'd':
+				if (drop != NONE) {
+					printf("Only one instance of a 'drop' argument allowed.\n");
+					print_err(argv[0]);
+				}
 				drop = HIGHEST;
 				break;
 			case 'm':
 				if (!is_present("^[:+-:]?[[:digit:]]+$", optarg)) {
+					printf("The modifier for each dice must be an integer.\n");
 					print_err(argv[0]);
 				}
 				mod_ea_die = atoi(optarg);
@@ -50,37 +59,22 @@ int main(int argc, char *argv[])
 	}
 
 	for (; optind < argc; optind++) {
-		char pattern_x_in_y[] = "^([[:digit:]]+)-in-([[:digit:]]+)$";
-		char pattern_percent[] = "^([[:digit:]]+)%$";
-		char pattern[] = "^([[:digit:]]+)?"
-				 "(d(%|[[:digit:]]+))"
-				 "([:+-:][[:digit:]]+)?"
-				 "(([:*:]|×|x)([[:digit:]]+))?$";
+		char *pattern_x_in_y = "^([[:digit:]]+)-in-([[:digit:]]+)$";
+		char *pattern_percent = "^([[:digit:]]+)%$";
+		char *pattern_roll = "^([[:digit:]]+)?"
+				     "(d(%|[[:digit:]]+))"
+				     "([:+-:][[:digit:]]+)?"
+				     "(([:*:]|×|x)([[:digit:]]+))?$";
 
 		char *roll_exp = argv[optind];
-		if (is_present(pattern, roll_exp)) {
+		if (is_present(pattern_roll, roll_exp)) {
+			roll_dice_arg_t roll;
+			roll = get_dice_args(roll_exp);
+			roll.mod_ea_die = mod_ea_die;
+			roll.maximize_roll = maximize_roll;
+			roll.drop = drop;
 			printf("Rolling %s...\n", roll_exp);
-
-			if (mod_ea_die) {
-				printf("...mod each die is %d...\n", mod_ea_die);
-			}
-
-			if (maximize_roll) {
-				printf("...maximizing roll...\n");
-			}
-
-			switch (drop) {
-				case NONE:
-					break;
-				case LOWEST:
-					printf("...dropping lowest roll...\n");
-					break;
-				case HIGHEST:
-					printf("...dropping highest roll...\n");
-					break;
-			}
-
-			printf("You rolled %d.\n", roll_dice(.roll_exp = roll_exp, .mod_ea_die = mod_ea_die, .drop = drop, .maximize_roll = maximize_roll));
+			printf("You rolled %d.\n", roll_dice(roll));
 		} else if (is_present(pattern_percent, roll_exp) |
 			   is_present(pattern_x_in_y, roll_exp)) {
 			printf("Testing %s...\n", roll_exp);
@@ -89,6 +83,5 @@ int main(int argc, char *argv[])
 			printf("Roll expression does not match standard format.\n");
 			print_err(argv[0]);
 		}
-		printf("\n");
 	}
 }
