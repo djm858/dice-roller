@@ -27,64 +27,6 @@ bool is_present(char *pattern, char *str)
 }
 
 /*
- * Takes a pointer to a string and replaces a character to remove with the
- * character to insert in its place. Only performs this action once. To replace
- * all instances, use the 'replace' function.
- */
-void replace_once(char *to_remove, char *to_insert, char **str)
-{
-	regex_t regex;
-	int ret;
-
-	ret = regcomp(&regex, to_remove, REG_EXTENDED);
-
-	if (ret != 0) {
-		printf("Regex compile failed\n");
-		return;
-	}
-
-	regmatch_t matches[50];
-	ret = regexec(&regex, *str, 20, matches, REG_EXTENDED);
-
-	if (!ret) {
-		int start = matches[0].rm_so;
-		int len = matches[0].rm_eo - matches[0].rm_so;
-
-		int allocation_size = start +
-		                      strlen(to_insert) +
-		                      strlen(*str + start + len) +
-		                      1;
-		char output[allocation_size];
-		output[0] = '\0';
-
-		strncpy(output, *str, start);
-		output[start] = '\0';
-
-		strcat(output, to_insert);
-
-		strcat(output, *str + start + len);
-
-		free(*str); *str = NULL;
-		*str = strdup(output);
-
-		return;
-	}
-
-	return;
-}
-
-/*
- * Uses the replace_once function on a continual loop to replace out the string
- * to remove until all instances are substituted.
- */
-void replace(char *to_remove, char *to_insert, char **str)
-{
-	while (is_present(to_remove, *str)) {
-		replace_once(to_remove, to_insert, &*str);
-	}
-}
-
-/*
  * Finds patterns in the source string and assigns each group surrounded by
  * parentheses to separate group numbers. Extracts and returns the substring in
  * the group of the provided group_number. This function allocates memory via
@@ -130,8 +72,11 @@ char *extract(char *source, char *pattern_rgx, int group_number)
 
 			if (g == group_number &&
 			    group_array[g].rm_so != (size_t)-1) {
-				output = strdup(cursor_copy +
-				                group_array[g].rm_so);
+				output = strdup(cursor_copy + group_array[g].rm_so);
+				if (output == NULL) {
+					printf("Memory allocation failed.\n");
+					exit(EXIT_FAILURE);
+				}
 			}
 		}
 		cursor += offset;

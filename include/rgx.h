@@ -7,6 +7,4 @@
 #include <regex.h>
 
 bool is_present();
-void replace_once();
-void replace();
 char *extract();

@@ -11,6 +11,29 @@ void print_err(char *program_name)
 	exit(EXIT_FAILURE);
 }
 
+void print_roll_args(roll_dice_arg_t roll)
+{
+	printf("[dice: %d] ", roll.number_of_dice);
+	printf("[size: d%d] ", roll.size_of_dice);
+	printf("[mod ea: %d] ", roll.mod_ea_die);
+	printf("[mod total: %d] ", roll.mod_total);
+	printf("[mult: %d] ", roll.mult);
+	if (roll.maximize_roll) {
+		printf("[roll: max] ");
+	}
+	switch (roll.drop) {
+		case NONE:
+			break;
+		case LOWEST:
+			printf("[drop: low] ");
+			break;
+		case HIGHEST:
+			printf("[drop: high] ");
+			break;
+	}
+	printf("\n");
+}
+
 int main(int argc, char *argv[])
 {
 	struct timespec ts;
@@ -23,7 +46,7 @@ int main(int argc, char *argv[])
 	bool verbose = false;
 	enum drop_type drop = NONE;
 
-	while ((opt = getopt(argc, argv, ":adm:u")) != -1) {
+	while ((opt = getopt(argc, argv, ":adm:uv")) != -1) {
 		switch (opt) {
 			case 'a':
 				if (drop != NONE) {
@@ -74,6 +97,9 @@ int main(int argc, char *argv[])
 			roll.maximize_roll = maximize_roll;
 			roll.drop = drop;
 			printf("Rolling %s...\n", roll_exp);
+			if (verbose) {
+				print_roll_args(roll);
+			}
 			printf("You rolled %d.\n", roll_dice(roll));
 		} else if (is_present(pattern_percent, roll_exp) |
 			   is_present(pattern_x_in_y, roll_exp)) {
