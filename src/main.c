@@ -6,7 +6,7 @@
 
 void print_err(char *program_name)
 {
-	char *msg = "Usage: %s [-a or d] [-m mod_ea_die] [-u] [-v] 'roll_exp'\n";
+	char *msg = "Usage: %s [-d low/high] [-m mod_ea_die] [-u] [-v] 'roll_exp'\n";
 	fprintf(stderr, msg, program_name);
 	exit(EXIT_FAILURE);
 }
@@ -23,21 +23,23 @@ int main(int argc, char *argv[])
 	bool verbose = false;
 	enum drop_type drop = NONE;
 
-	while ((opt = getopt(argc, argv, ":adm:uv")) != -1) {
+	while ((opt = getopt(argc, argv, ":d:m:uv")) != -1) {
 		switch (opt) {
-			case 'a':
-				if (drop != NONE) {
-					printf("Only one instance of a 'drop' argument allowed.\n");
-					print_err(argv[0]);
-				}
-				drop = LOWEST;
-				break;
 			case 'd':
-				if (drop != NONE) {
-					printf("Only one instance of a 'drop' argument allowed.\n");
+				if (!strcmp("l", optarg) ||
+				    !strcmp("lo", optarg) ||
+				    !strcmp("low", optarg) ||
+				    !strcmp("lowest", optarg)) {
+				    	drop = LOWEST;
+				} else if (!strcmp("h", optarg) ||
+				           !strcmp("hi", optarg) ||
+				           !strcmp("high", optarg) ||
+				           !strcmp("highest", optarg)) {
+				        drop = HIGHEST;
+				} else {
+					printf("Need to specify drop low or high.\n");
 					print_err(argv[0]);
 				}
-				drop = HIGHEST;
 				break;
 			case 'm':
 				if (!is_present("^[:+-:]?[[:digit:]]+$", optarg)) {
