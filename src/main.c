@@ -11,29 +11,6 @@ void print_err(char *program_name)
 	exit(EXIT_FAILURE);
 }
 
-void print_roll_args(roll_dice_arg_t roll)
-{
-	printf("[dice: %d] ", roll.number_of_dice);
-	printf("[size: d%d] ", roll.size_of_dice);
-	printf("[mod ea: %d] ", roll.mod_ea_die);
-	printf("[mod total: %d] ", roll.mod_total);
-	printf("[mult: %d] ", roll.mult);
-	if (roll.maximize_roll) {
-		printf("[roll: max] ");
-	}
-	switch (roll.drop) {
-		case NONE:
-			break;
-		case LOWEST:
-			printf("[drop: low] ");
-			break;
-		case HIGHEST:
-			printf("[drop: high] ");
-			break;
-	}
-	printf("\n");
-}
-
 int main(int argc, char *argv[])
 {
 	struct timespec ts;
@@ -98,13 +75,25 @@ int main(int argc, char *argv[])
 			roll.drop = drop;
 			printf("Rolling %s...\n", roll_exp);
 			if (verbose) {
-				print_roll_args(roll);
+				print_roll_dice_args(roll);
+				printf("\n");
 			}
 			printf("You rolled %d.\n", roll_dice(roll));
 		} else if (is_present(pattern_percent, roll_exp) |
 			   is_present(pattern_x_in_y, roll_exp)) {
+			test_arg_t test;
+			test = get_test_args(roll_exp);
+			int result = roll_die(test.die_size);
 			printf("Testing %s...\n", roll_exp);
-			is_successful(roll_exp);
+			if (verbose) {
+				print_test_args(test);
+				printf("\n");
+			}
+			if (result <= test.target) {
+				printf("You succeeded with a roll of %d!\n", result);
+			} else {
+				printf("You failed with a roll of %d.\n", result);
+			}
 		} else {
 			printf("Roll expression does not match standard format.\n");
 			print_err(argv[0]);

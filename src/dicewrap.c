@@ -46,14 +46,14 @@ roll_dice_arg_t get_dice_args(char *roll_exp)
 		free(mult_s); mult_s = NULL;
 	}
 
-	roll_dice_arg_t arg = {
+	roll_dice_arg_t roll = {
 		.number_of_dice = number_of_dice,
 		.size_of_dice = size_of_dice,
 		.mod_total = mod_total,
 		.mult = mult
 	};
 
-	return arg;
+	return roll;
 }
 
 /*
@@ -63,33 +63,39 @@ roll_dice_arg_t get_dice_args(char *roll_exp)
  * example, 45%, where a d100 is rolled and the result is true if less than or
  * equal to 45).
  */
-bool is_successful(char *odds)
+test_arg_t get_test_args(char *odds)
 {
 	char *pattern_x_in_y = "^([[:digit:]]+)-in-([[:digit:]]+)$";
 	char *pattern_percent = "^([[:digit:]]+)%$";
 
-	int x, y;
+	test_arg_t test;
 
 	if (is_present(pattern_x_in_y, odds)) {
-		char *x_s = extract(odds, pattern_x_in_y, 1);
-		char *y_s = extract(odds, pattern_x_in_y, 2);
+		char *target = extract(odds, pattern_x_in_y, 1);
+		char *die_size = extract(odds, pattern_x_in_y, 2);
 		
-		x = atoi(x_s);
-		y = atoi(y_s);
+		test.target = atoi(target);
+		test.die_size = atoi(die_size);
 
-		free(x_s); x_s = NULL;
-		free(y_s); y_s = NULL;
+		free(target); target = NULL;
+		free(die_size); die_size = NULL;
 	} else if (is_present(pattern_percent, odds)) {
-		char *x_s = extract(odds, pattern_percent, 1);
+		char *target = extract(odds, pattern_percent, 1);
 
-		x = atoi(x_s);
-		y = 100;
+		test.target = atoi(target);
+		test.die_size = 100;
 
-		free(x_s); x_s = NULL;
+		free(target); target = NULL;
 	} else {
 		printf("Invalid input for is_successful");
 		exit(EXIT_FAILURE);
 	}
 
-	return test_odds(x, y);
+	return test;
+}
+
+void print_test_args(test_arg_t test)
+{
+	printf("[size: d%d] ", test.die_size);
+	printf("[target: %d]", test.target);
 }

@@ -31,21 +31,6 @@ int roll_die(int size_of_die)
 }
 
 /*
- * Resolves tests that have x-in-y chance of succeeding.
- */
-bool test_odds(int x, int y)
-{
-	int roll = roll_die(y);
-	if (roll <= x) {
-		printf("You have succeeded with a roll of %d!\n", roll);
-		return true;
-	}
-
-	printf("You have failed with a roll of %d.\n", roll);
-	return false;
-}
-
-/*
  * Rolls a given size of dice a given number of times and stores each roll in an
  * array. They need to be stored separately (as opposed to adding them together
  * and returning the sum) because sometimes modifiers and minimums need to be
@@ -55,7 +40,6 @@ bool test_odds(int x, int y)
 int *roll_die_array(int number_of_dice, int size_of_dice)
 {
 	int *die_array = (int *)malloc(number_of_dice * sizeof(int));
-
 	if (die_array == NULL) {
 		printf("Memory allocation failed!\n");
 		exit(1);
@@ -64,6 +48,7 @@ int *roll_die_array(int number_of_dice, int size_of_dice)
 	for (int i = 0; i < number_of_dice; i++) {
 		die_array[i] = roll_die(size_of_dice);
 	}
+
 	return die_array;
 }
 
@@ -156,20 +141,20 @@ int sum_int_array(int *int_array, int array_length)
 /*
  * Calculates the average roll value from a given set of arguments.
  */
-float get_dice_avg(roll_dice_arg_t arg)
+float get_dice_avg(roll_dice_arg_t roll)
 {
 	float average;
 	
-	average = ((float)arg.size_of_dice + 1.0) / 2.0;
+	average = ((float)roll.size_of_dice + 1.0) / 2.0;
 	
-	average *= (float)arg.number_of_dice;
+	average *= (float)roll.number_of_dice;
 
-	average += (float)arg.mod_total;
+	average += (float)roll.mod_total;
 	if (average < 1.0) {
 		average = 1.0;
 	}
 
-	average *= (float)arg.mult;
+	average *= (float)roll.mult;
 
 	return average;
 }
@@ -184,34 +169,59 @@ float get_dice_avg(roll_dice_arg_t arg)
  * determining stats, or rolling with advantage), and dropping the highest
  * value (ie, rolling with disadvantage).
  */
-int roll_dice(roll_dice_arg_t arg)
+int roll_dice(roll_dice_arg_t roll)
 {
-	int *die_array = roll_die_array(arg.number_of_dice, arg.size_of_dice);
+	int *die_array = roll_die_array(roll.number_of_dice, roll.size_of_dice);
 
-	if (arg.maximize_roll) {
-		override_int_values(die_array, arg.number_of_dice, arg.size_of_dice);
+	if (roll.maximize_roll) {
+		override_int_values(die_array, roll.number_of_dice, roll.size_of_dice);
 	}
 
-	mod_each_int_value(die_array, arg.number_of_dice, arg.mod_ea_die);
+	mod_each_int_value(die_array, roll.number_of_dice, roll.mod_ea_die);
 
-	set_min_in_int_array(die_array, arg.number_of_dice, 1);
+	set_min_in_int_array(die_array, roll.number_of_dice, 1);
 
-	int total_roll = sum_int_array(die_array, arg.number_of_dice);
+	int total_roll = sum_int_array(die_array, roll.number_of_dice);
 
-	if (arg.drop == LOWEST) {
-		int lowest = get_lowest_int(die_array, arg.number_of_dice);
-		total_roll -= lowest;
-	} else if (arg.drop == HIGHEST) {
-		int highest = get_highest_int(die_array, arg.number_of_dice);
-		total_roll -= highest;
+	switch (roll.drop) {
+		case LOWEST:
+			int lowest = get_lowest_int(die_array, roll.number_of_dice);
+			total_roll -= lowest;
+			break;
+		case HIGHEST:
+			int highest = get_highest_int(die_array, roll.number_of_dice);
+			total_roll -= highest;
+			break;
 	}
 
 	free(die_array); die_array = NULL;
 
-	total_roll += arg.mod_total;
+	total_roll += roll.mod_total;
 	total_roll = maximum(1, total_roll);
 
-	total_roll *= arg.mult;
+	total_roll *= roll.mult;
 
 	return total_roll;
+}
+
+void print_roll_dice_args(roll_dice_arg_t roll)
+{
+	printf("[dice: %d] ", roll.number_of_dice);
+	printf("[size: d%d] ", roll.size_of_dice);
+	printf("[mod ea: %d] ", roll.mod_ea_die);
+	printf("[mod total: %d] ", roll.mod_total);
+	printf("[mult: %d]", roll.mult);
+	if (roll.maximize_roll) {
+		printf(" [roll: max]");
+	}
+	switch (roll.drop) {
+		case NONE:
+			break;
+		case LOWEST:
+			printf(" [drop: lowest]");
+			break;
+		case HIGHEST:
+			printf(" [drop: highest]");
+			break;
+	}
 }
