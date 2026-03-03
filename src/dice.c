@@ -21,7 +21,7 @@ int maximum(int x, int y)
  * learning that this may be biased towards lower numbers? Consider researching
  * and implementing a non-biased fuction.
  */
-int roll_die(int size_of_die)
+int dr_roll_die(int size_of_die)
 {
 	int roll_result;
 
@@ -37,7 +37,7 @@ int roll_die(int size_of_die)
  * applied to each roll. This functions dynamically allocates memory for the
  * array and returns a pointer to the array, so the caller must free the memory.
  */
-int *roll_die_array(int number_of_dice, int size_of_dice)
+int *dr_array_roll_die(int number_of_dice, int size_of_dice)
 {
 	int *die_array = (int *)malloc(number_of_dice * sizeof(int));
 	if (die_array == NULL) {
@@ -46,21 +46,10 @@ int *roll_die_array(int number_of_dice, int size_of_dice)
 	}
 
 	for (int i = 0; i < number_of_dice; i++) {
-		die_array[i] = roll_die(size_of_dice);
+		die_array[i] = dr_roll_die(size_of_dice);
 	}
 
 	return die_array;
-}
-
-/*
- * Overrides current values in an int array. Useful for setting setting all
- * rolls to maximum values, minimum values, etc.
- */
-void override_int_values(int *int_array, int array_length, int new_value)
-{
-	for (int i = 0; i < array_length; i++) {
-		int_array[i] = new_value;
-	}
 }
 
 /*
@@ -78,7 +67,7 @@ void mod_each_int_value(int *int_array, int array_length, int modifier)
  * Gets the lowest value in an int array. Used when the drop_lowest option is
  * set to true.
  */
-int get_lowest_int(int *int_array, int array_length)
+int dr_array_minimum(int *int_array, int array_length)
 {
 	int lowest;
 
@@ -97,7 +86,7 @@ int get_lowest_int(int *int_array, int array_length)
  * Gets the highest value in an int array. Used when the drop_highest option is
  * set to true.
  */
-int get_highest_int(int *int_array, int array_length)
+int dr_array_maximum(int *int_array, int array_length)
 {
 	int highest;
 
@@ -141,22 +130,121 @@ int sum_int_array(int *int_array, int array_length)
 /*
  * Calculates the average roll value from a given set of arguments.
  */
-float get_dice_avg(roll_dice_arg_t roll)
+int dr_average_simple(struct RollDiceArgs roll)
 {
-	float average;
+	float avg;
 	
-	average = ((float)roll.size_of_dice + 1.0) / 2.0;
-	
-	average *= (float)roll.number_of_dice;
+	avg = (roll.size_of_dice + 1.0) / 2.0;
+	avg += roll.mod_ea_die;
+	avg = maximum(1, avg);
 
-	average += (float)roll.mod_total;
-	if (average < 1.0) {
-		average = 1.0;
+	avg *= roll.number_of_dice;
+	switch (roll.drop) {
+		case LOWEST:
+		case HIGHEST:
+			avg -= avg / roll.number_of_dice;
+			break;
+	}
+	avg += roll.mod_total;
+	avg = maximum(1, avg);
+
+	avg *= roll.mult;
+
+	return avg;
+}
+
+double dr_average_recursive(struct RollDiceArgs roll, int dice_number, int to_drop, int sum_roll)
+{
+	if (dice_number > roll.number_of_dice) {
+		sum_roll -= to_drop;
+		sum_roll += roll.mod_total;
+		sum_roll = maximum(1, sum_roll);
+		sum_roll *= roll.mult;
+		return sum_roll;
 	}
 
-	average *= (float)roll.mult;
+	int sum_roll_single_iter = sum_roll;
+	double sum_roll_all_iters = 0;
+	int to_drop_single_iter = to_drop;
 
-	return average;
+	for (int i = roll.size_of_dice; i > 0; i--) {
+		int current_roll = maximum(1, i + roll.mod_ea_die);
+		sum_roll = sum_roll_single_iter + current_roll;
+		if (dice_number == 1) {
+			to_drop = current_roll;
+		} else {
+			if (roll.drop == LOWEST) {
+				to_drop = minimum(current_roll, to_drop);
+			} else if (roll.drop == HIGHEST) {
+				to_drop = maximum(current_roll, to_drop_single_iter);
+			}
+		}
+		sum_roll_all_iters += dr_average_recursive(roll, dice_number + 1, to_drop, sum_roll);
+	}
+
+	return sum_roll_all_iters;
+}
+
+float dr_average(struct RollDiceArgs roll)
+{
+	if (roll.mod_ea_die >= 0 & roll.mod_total >= 0) {
+		return dr_average_simple(roll);
+	}
+	double sum = dr_average_recursive(roll, 1, 0, 0);
+	double iterations = pow(roll.size_of_dice, roll.number_of_dice);
+	return (float)sum / iterations;
+}
+
+/*
+ * Calculates the min roll value from a given set of arguments.
+ */
+int dr_minimum(struct RollDiceArgs roll)
+{
+	int min;
+	
+	min = 1;
+	min += roll.mod_ea_die;
+	min = maximum(1, min);
+
+	min *= roll.number_of_dice;
+	switch (roll.drop) {
+		case LOWEST:
+		case HIGHEST:
+			min -= min / roll.number_of_dice;
+			break;
+	}
+	min += roll.mod_total;
+	min = maximum(1, min);
+
+	min *= roll.mult;
+
+	return min;
+}
+
+/*
+ * Calculates the max roll value from a given set of arguments.
+ */
+int dr_maximum(struct RollDiceArgs roll)
+{
+	int max;
+	
+	max = roll.size_of_dice;
+	max += roll.mod_ea_die;
+	max = maximum(1, max);
+
+	max *= roll.number_of_dice;
+	switch (roll.drop) {
+		case LOWEST:
+		case HIGHEST:
+			max -= max / roll.number_of_dice;
+			break;
+	}
+	max += roll.mod_total;
+	max = maximum(1, max);
+
+	max *= roll.mult;
+
+	return max;
 }
 
 /*
@@ -164,32 +252,24 @@ float get_dice_avg(roll_dice_arg_t roll)
  * a modifier for each individual dice (ie, Constitution modifier for health),
  * an overall modifier (ie, Strength modifier on a damage roll), and a
  * multiplier (ie 1d6*10). It also allows for optional arguments such as
- * maximizing the roll (ie, monsters with max health or critical damage rolls in
- * some rulesets), dropping the lowest value (ie, 4d6 drop lowest for
- * determining stats, or rolling with advantage), and dropping the highest
- * value (ie, rolling with disadvantage).
+ * dropping the lowest value (ie, 4d6 drop lowest for determining stats, or
+ * rolling with advantage), and dropping the highest value (ie, rolling with
+ * disadvantage).
  */
-int roll_dice(roll_dice_arg_t roll)
+int dr_roll_dice(struct RollDiceArgs roll)
 {
-	int *die_array = roll_die_array(roll.number_of_dice, roll.size_of_dice);
-
-	if (roll.maximize_roll) {
-		override_int_values(die_array, roll.number_of_dice, roll.size_of_dice);
-	}
-
+	int *die_array = dr_array_roll_die(roll.number_of_dice, roll.size_of_dice);
 	mod_each_int_value(die_array, roll.number_of_dice, roll.mod_ea_die);
-
 	set_min_in_int_array(die_array, roll.number_of_dice, 1);
 
 	int total_roll = sum_int_array(die_array, roll.number_of_dice);
-
 	switch (roll.drop) {
 		case LOWEST:
-			int lowest = get_lowest_int(die_array, roll.number_of_dice);
+			int lowest = dr_array_minimum(die_array, roll.number_of_dice);
 			total_roll -= lowest;
 			break;
 		case HIGHEST:
-			int highest = get_highest_int(die_array, roll.number_of_dice);
+			int highest = dr_array_maximum(die_array, roll.number_of_dice);
 			total_roll -= highest;
 			break;
 	}
@@ -204,16 +284,13 @@ int roll_dice(roll_dice_arg_t roll)
 	return total_roll;
 }
 
-void print_roll_dice_args(roll_dice_arg_t roll)
+void dr_args_print(struct RollDiceArgs roll)
 {
 	printf("[dice: %d] ", roll.number_of_dice);
 	printf("[size: d%d] ", roll.size_of_dice);
 	printf("[mod ea: %d] ", roll.mod_ea_die);
 	printf("[mod total: %d] ", roll.mod_total);
 	printf("[mult: %d]", roll.mult);
-	if (roll.maximize_roll) {
-		printf(" [roll: max]");
-	}
 	switch (roll.drop) {
 		case NONE:
 			break;
@@ -224,4 +301,13 @@ void print_roll_dice_args(roll_dice_arg_t roll)
 			printf(" [drop: highest]");
 			break;
 	}
+	printf("\n");
+}
+
+void dr_stats_print(struct RollDiceArgs roll)
+{
+	float avg = dr_average(roll);
+	int min = dr_minimum(roll);
+	int max = dr_maximum(roll);
+	printf("[Min: %d] [Max: %d] [Avg: %.3f]\n", min, max, avg);
 }

@@ -3,26 +3,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
-enum drop_type {
+enum DropType {
 	NONE,
 	LOWEST,
 	HIGHEST
 };
 
-typedef struct roll_dice_arg {
+struct RollDiceArgs {
 	int number_of_dice;
 	int size_of_dice;
 	int mod_total;
 	int mod_ea_die;
 	int mult;
-	bool maximize_roll;
-	enum drop_type drop;
-} roll_dice_arg_t;
+	enum DropType drop;
+};
 
 int minimum();
 int maximum();
-int roll_die();
-float get_dice_avg();
-int roll_dice();
-void print_roll_dice_args();
+int dr_roll_die();
+float dr_average();
+int dr_minimum();
+int dr_maximum();
+int dr_roll_dice();
+void dr_args_print();
+void dr_stats_print();

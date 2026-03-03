@@ -4,26 +4,30 @@
 #include <unistd.h>
 #include "dicewrap.h"
 
+void random_seed()
+{
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	srand(ts.tv_nsec ^ getpid());
+}
+
 void print_err(char *program_name)
 {
-	char *msg = "Usage: %s [-d low/high] [-m mod_ea_die] [-u] [-v] 'roll_exp'\n";
+	char *msg = "Usage: %s 'roll_exp' [-d low/high] [-m mod_ea_die] [-v]\n";
 	fprintf(stderr, msg, program_name);
 	exit(EXIT_FAILURE);
 }
 
 int main(int argc, char *argv[])
 {
-	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-	srand(ts.tv_nsec ^ getpid());
+	random_seed();
 
 	int opt;
 	int mod_ea_die = 0;
-	bool maximize_roll = false;
 	bool verbose = false;
-	enum drop_type drop = NONE;
+	enum DropType drop = NONE;
 
-	while ((opt = getopt(argc, argv, ":d:m:uv")) != -1) {
+	while ((opt = getopt(argc, argv, ":d:m:v")) != -1) {
 		switch (opt) {
 			case 'd':
 				if (!strcmp("l", optarg) ||
@@ -37,7 +41,7 @@ int main(int argc, char *argv[])
 				           !strcmp("highest", optarg)) {
 				        drop = HIGHEST;
 				} else {
-					printf("Need to specify drop low or high.\n");
+					printf("Need to specify drop 'low' or 'high'.\n");
 					print_err(argv[0]);
 				}
 				break;
@@ -47,9 +51,6 @@ int main(int argc, char *argv[])
 					print_err(argv[0]);
 				}
 				mod_ea_die = atoi(optarg);
-				break;
-			case 'u':
-				maximize_roll = true;
 				break;
 			case 'v':
 				verbose = true;
@@ -70,22 +71,21 @@ int main(int argc, char *argv[])
 
 		char *roll_exp = argv[optind];
 		if (is_present(pattern_roll, roll_exp)) {
-			roll_dice_arg_t roll;
+			struct RollDiceArgs roll;
 			roll = get_dice_args(roll_exp);
 			roll.mod_ea_die = mod_ea_die;
-			roll.maximize_roll = maximize_roll;
 			roll.drop = drop;
 			printf("Rolling %s...\n", roll_exp);
 			if (verbose) {
-				print_roll_dice_args(roll);
-				printf("\n");
+				dr_args_print(roll);
+				dr_stats_print(roll);
 			}
-			printf("You rolled %d.\n", roll_dice(roll));
+			printf("You rolled %d.\n", dr_roll_dice(roll));
 		} else if (is_present(pattern_percent, roll_exp) |
 			   is_present(pattern_x_in_y, roll_exp)) {
-			test_arg_t test;
+			struct TestArgs test;
 			test = get_test_args(roll_exp);
-			int result = roll_die(test.die_size);
+			int result = dr_roll_die(test.die_size);
 			printf("Testing %s...\n", roll_exp);
 			if (verbose) {
 				print_test_args(test);
@@ -101,4 +101,6 @@ int main(int argc, char *argv[])
 			print_err(argv[0]);
 		}
 	}
+
+	return 0;
 }

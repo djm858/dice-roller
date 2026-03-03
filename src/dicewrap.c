@@ -7,7 +7,7 @@
  * dice.c functions. It also allows the user to write 'd%' and it will interpret
  * it as a d100 roll.
  */
-roll_dice_arg_t get_dice_args(char *roll_exp)
+struct RollDiceArgs get_dice_args(char *roll_exp)
 {
 	char *pattern_roll = "([[:digit:]]+)?"
 	                     "(d(%|[[:digit:]]+))"
@@ -46,7 +46,7 @@ roll_dice_arg_t get_dice_args(char *roll_exp)
 		free(mult_s); mult_s = NULL;
 	}
 
-	roll_dice_arg_t roll = {
+	struct RollDiceArgs roll = {
 		.number_of_dice = number_of_dice,
 		.size_of_dice = size_of_dice,
 		.mod_total = mod_total,
@@ -63,12 +63,12 @@ roll_dice_arg_t get_dice_args(char *roll_exp)
  * example, 45%, where a d100 is rolled and the result is true if less than or
  * equal to 45).
  */
-test_arg_t get_test_args(char *odds)
+struct TestArgs get_test_args(char *odds)
 {
 	char *pattern_x_in_y = "^([[:digit:]]+)-in-([[:digit:]]+)$";
 	char *pattern_percent = "^([[:digit:]]+)%$";
 
-	test_arg_t test;
+	struct TestArgs test;
 
 	if (is_present(pattern_x_in_y, odds)) {
 		char *target = extract(odds, pattern_x_in_y, 1);
@@ -87,14 +87,14 @@ test_arg_t get_test_args(char *odds)
 
 		free(target); target = NULL;
 	} else {
-		printf("Invalid input for is_successful");
+		printf("Invalid input for get_test_args");
 		exit(EXIT_FAILURE);
 	}
 
 	return test;
 }
 
-void print_test_args(test_arg_t test)
+void print_test_args(struct TestArgs test)
 {
 	printf("[size: d%d] ", test.die_size);
 	printf("[target: %d]", test.target);
