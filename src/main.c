@@ -26,8 +26,6 @@ int main(int argc, char *argv[])
 	bool verbose = false;
 	enum DropType drop = NONE;
 	char *roll_exp;
-	char *pattern_x_in_y = "^([[:digit:]]+)-in-([[:digit:]]+)$";
-	char *pattern_percent = "^([[:digit:]]+)%$";
 	char *pattern_roll = "^([[:digit:]]+)?"
 			     "([dD](%|[[:digit:]]+))"
 			     "([:+-:][[:digit:]]+)?"
@@ -87,21 +85,6 @@ int main(int argc, char *argv[])
 				dice_roll_stats_print(roll);
 			}
 			printf("You rolled %d.\n", dice_roll(roll));
-		} else if (rgx_match(roll_exp, pattern_percent) |
-			   rgx_match(roll_exp, pattern_x_in_y)) {
-			struct DifficultyCheckArgs test;
-			test = difficulty_check_args_get(roll_exp);
-			int result = dice_roll_basic(test.die_size);
-			printf("Testing %s...\n", roll_exp);
-			if (verbose) {
-				dice_difficulty_check_args_print(test);
-				printf("\n");
-			}
-			if (result <= test.target) {
-				printf("You succeeded with a roll of %d!\n", result);
-			} else {
-				printf("You failed with a roll of %d.\n", result);
-			}
 		} else {
 			printf("Roll expression does not match standard format.\n");
 			print_err(argv[0]);

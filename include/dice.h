@@ -20,11 +20,6 @@ struct RollDiceArgs {
 	enum DropType drop;
 };
 
-struct DifficultyCheckArgs {
-	int target;
-	int die_size;
-};
-
 int minimum();
 int maximum();
 int dice_roll_basic();
@@ -34,4 +29,3 @@ int dice_roll_maximum_get();
 void dice_roll_args_print();
 void dice_roll_stats_print();
 int dice_roll();
-void dice_difficulty_check_args_print();

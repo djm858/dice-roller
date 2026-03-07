@@ -280,9 +280,3 @@ void dice_roll_stats_print(struct RollDiceArgs roll)
 	int max = dice_roll_maximum_get(roll);
 	printf("[Min: %d] [Max: %d] [Avg: %.3f]\n", min, max, avg);
 }
-
-void dice_difficulty_check_args_print(struct DifficultyCheckArgs test)
-{
-	printf("[size: d%d] ", test.die_size);
-	printf("[target: %d]", test.target);
-}
