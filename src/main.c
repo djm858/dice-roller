@@ -25,12 +25,13 @@ int main(int argc, char *argv[])
 	int mod_ea_die = 0;
 	bool verbose = false;
 	enum DropType drop = NONE;
+	char *roll_exp;
 	char *pattern_x_in_y = "^([[:digit:]]+)-in-([[:digit:]]+)$";
 	char *pattern_percent = "^([[:digit:]]+)%$";
 	char *pattern_roll = "^([[:digit:]]+)?"
-			     "(d(%|[[:digit:]]+))"
+			     "([dD](%|[[:digit:]]+))"
 			     "([:+-:][[:digit:]]+)?"
-			     "(([:*:]|×|x)([[:digit:]]+))?$";
+			     "(([:*:]|×|[xX])([[:digit:]]+))?$";
 
 
 	random_seed_generate();
@@ -38,14 +39,14 @@ int main(int argc, char *argv[])
 	while ((opt = getopt(argc, argv, ":d:m:v")) != -1) {
 		switch (opt) {
 			case 'd':
-				if (!strcmp("l", optarg) ||
-				    !strcmp("lo", optarg) ||
-				    !strcmp("low", optarg) ||
+				if (!strcmp("l", optarg) |
+				    !strcmp("lo", optarg) |
+				    !strcmp("low", optarg) |
 				    !strcmp("lowest", optarg)) {
 				    	drop = LOWEST;
-				} else if (!strcmp("h", optarg) ||
-				           !strcmp("hi", optarg) ||
-				           !strcmp("high", optarg) ||
+				} else if (!strcmp("h", optarg) |
+				           !strcmp("hi", optarg) |
+				           !strcmp("high", optarg) |
 				           !strcmp("highest", optarg)) {
 				        drop = HIGHEST;
 				} else {
@@ -72,10 +73,10 @@ int main(int argc, char *argv[])
 	for (; optind < argc; optind++) {
 		if (strnlen(argv[optind], RGX_MAX_LENGTH) >= RGX_MAX_LENGTH) {
 			printf("Roll expression is too long.\n");
-			print_err(argv[0]);
+			exit(EXIT_FAILURE);
 		}
-		char *roll_exp = argv[optind];
-		if (rgx_match(roll_exp,pattern_roll)) {
+		roll_exp = argv[optind];
+		if (rgx_match(roll_exp, pattern_roll)) {
 			struct RollDiceArgs roll;
 			roll = dwrap_roll_args_get(roll_exp);
 			roll.mod_ea_die = mod_ea_die;
