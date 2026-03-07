@@ -12,16 +12,16 @@ bool rgx_match(char *source, char *pattern)
 
 	reg_status = regcomp(&regex, pattern, REG_EXTENDED);
 	if (reg_status != 0) {
-		fprintf(stderr, "Could not compile regex\n");
+		fprintf(stderr, "Could not compile regex.\n");
 		return match;
 	}
 
 	reg_status = regexec(&regex, source, 0, NULL, 0);
-	regfree(&regex);
-
 	if (reg_status == 0) {
 		match = true;
 	}
+
+	regfree(&regex);
 
 	return match;
 }
@@ -34,29 +34,13 @@ bool rgx_match(char *source, char *pattern)
  */
 char *rgx_extract(char *source, char *pattern, int group_number)
 {
-	int number_of_parentheses;
-	int max_matches;
 	int reti;
 	int start;
 	int end;
 	int length;
 	char *result;
-
-	number_of_parentheses = 0;
-	for (int i = 0; pattern[i] != '\0'; i++) {
-		if (pattern[i] == '(') {
-			number_of_parentheses++;
-		}
-	}
-
-	max_matches = number_of_parentheses + 1;
-	if (max_matches > RGX_MAX_MATCHES) {
-		printf("Too many match groups.\n");
-		return NULL;
-	}
-
 	regex_t regex;
-	regmatch_t matches[max_matches];
+	regmatch_t matches[RGX_MAX_MATCHES];
 
 	reti = regcomp(&regex, pattern, REG_EXTENDED);
 	if (reti) {
@@ -64,8 +48,8 @@ char *rgx_extract(char *source, char *pattern, int group_number)
 		return NULL;
 	}
 
-	reti = regexec(&regex, source, max_matches, matches, 0);
-	if (reti == REG_NOMATCH | reti != 0 | matches[group_number].rm_so == -1) {
+	reti = regexec(&regex, source, RGX_MAX_MATCHES, matches, 0);
+	if (reti | matches[group_number].rm_so == -1) {
 		regfree(&regex);
 		return NULL;
 	}
@@ -73,10 +57,9 @@ char *rgx_extract(char *source, char *pattern, int group_number)
 	start = matches[group_number].rm_so;
 	end = matches[group_number].rm_eo;
 	length = end - start;
-
 	if (length > RGX_MAX_LENGTH) {
-		printf("Input length is too long.\n");
 		regfree(&regex);
+		printf("Input length is too long.\n");
 		return NULL;
 	}
 
