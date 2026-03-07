@@ -6,5 +6,8 @@
 #include <stdbool.h>
 #include <regex.h>
 
-bool is_present();
-char *extract();
+#define RGX_MAX_LENGTH 20
+#define RGX_MAX_MATCHES 10
+
+bool rgx_match();
+char *rgx_extract();

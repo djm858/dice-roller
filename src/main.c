@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <time.h>
 #include <unistd.h>
 #include "dicewrap.h"
 
-void random_seed()
+void random_seed_generate()
 {
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -20,12 +21,19 @@ void print_err(char *program_name)
 
 int main(int argc, char *argv[])
 {
-	random_seed();
-
 	int opt;
 	int mod_ea_die = 0;
 	bool verbose = false;
 	enum DropType drop = NONE;
+	char *pattern_x_in_y = "^([[:digit:]]+)-in-([[:digit:]]+)$";
+	char *pattern_percent = "^([[:digit:]]+)%$";
+	char *pattern_roll = "^([[:digit:]]+)?"
+			     "(d(%|[[:digit:]]+))"
+			     "([:+-:][[:digit:]]+)?"
+			     "(([:*:]|×|x)([[:digit:]]+))?$";
+
+
+	random_seed_generate();
 
 	while ((opt = getopt(argc, argv, ":d:m:v")) != -1) {
 		switch (opt) {
@@ -46,7 +54,7 @@ int main(int argc, char *argv[])
 				}
 				break;
 			case 'm':
-				if (!is_present("^[:+-:]?[[:digit:]]+$", optarg)) {
+				if (!rgx_match(optarg, "^[:+-:]?[[:digit:]]+$")) {
 					printf("The modifier for each dice must be an integer.\n");
 					print_err(argv[0]);
 				}
@@ -62,33 +70,30 @@ int main(int argc, char *argv[])
 	}
 
 	for (; optind < argc; optind++) {
-		char *pattern_x_in_y = "^([[:digit:]]+)-in-([[:digit:]]+)$";
-		char *pattern_percent = "^([[:digit:]]+)%$";
-		char *pattern_roll = "^([[:digit:]]+)?"
-				     "(d(%|[[:digit:]]+))"
-				     "([:+-:][[:digit:]]+)?"
-				     "(([:*:]|×|x)([[:digit:]]+))?$";
-
+		if (strnlen(argv[optind], RGX_MAX_LENGTH) >= RGX_MAX_LENGTH) {
+			printf("Roll expression is too long.\n");
+			print_err(argv[0]);
+		}
 		char *roll_exp = argv[optind];
-		if (is_present(pattern_roll, roll_exp)) {
+		if (rgx_match(roll_exp,pattern_roll)) {
 			struct RollDiceArgs roll;
-			roll = get_dice_args(roll_exp);
+			roll = dwrap_roll_args_get(roll_exp);
 			roll.mod_ea_die = mod_ea_die;
 			roll.drop = drop;
 			printf("Rolling %s...\n", roll_exp);
 			if (verbose) {
-				dr_args_print(roll);
-				dr_stats_print(roll);
+				dice_roll_args_print(roll);
+				dice_roll_stats_print(roll);
 			}
-			printf("You rolled %d.\n", dr_roll_dice(roll));
-		} else if (is_present(pattern_percent, roll_exp) |
-			   is_present(pattern_x_in_y, roll_exp)) {
-			struct TestArgs test;
-			test = get_test_args(roll_exp);
-			int result = dr_roll_die(test.die_size);
+			printf("You rolled %d.\n", dice_roll(roll));
+		} else if (rgx_match(roll_exp, pattern_percent) |
+			   rgx_match(roll_exp, pattern_x_in_y)) {
+			struct DifficultyCheckArgs test;
+			test = difficulty_check_args_get(roll_exp);
+			int result = dice_roll_basic(test.die_size);
 			printf("Testing %s...\n", roll_exp);
 			if (verbose) {
-				print_test_args(test);
+				dice_difficulty_check_args_print(test);
 				printf("\n");
 			}
 			if (result <= test.target) {

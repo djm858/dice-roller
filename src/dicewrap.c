@@ -7,7 +7,7 @@
  * dice.c functions. It also allows the user to write 'd%' and it will interpret
  * it as a d100 roll.
  */
-struct RollDiceArgs get_dice_args(char *roll_exp)
+struct RollDiceArgs dwrap_roll_args_get(char *roll_exp)
 {
 	char *pattern_roll = "([[:digit:]]+)?"
 	                     "(d(%|[[:digit:]]+))"
@@ -15,14 +15,14 @@ struct RollDiceArgs get_dice_args(char *roll_exp)
 	                     "(([:*:]|×|x)([[:digit:]]+))?";
 
 	int number_of_dice = 1;
-	char *number_of_dice_s = extract(roll_exp, pattern_roll, 1);
+	char *number_of_dice_s = rgx_extract(roll_exp, pattern_roll, 1);
 	if (number_of_dice_s) {
 		number_of_dice = atoi(number_of_dice_s);
 		free(number_of_dice_s); number_of_dice_s = NULL;
 	}
 
 	int size_of_dice;
-	char *size_of_dice_s = extract(roll_exp, pattern_roll, 3);
+	char *size_of_dice_s = rgx_extract(roll_exp, pattern_roll, 3);
 	if (size_of_dice_s) {
 		if (!strcmp(size_of_dice_s, "%")) {
 			size_of_dice = 100;
@@ -33,14 +33,14 @@ struct RollDiceArgs get_dice_args(char *roll_exp)
 	}
 
 	int mod_total = 0;
-	char *mod_total_s = extract(roll_exp, pattern_roll, 4);
+	char *mod_total_s = rgx_extract(roll_exp, pattern_roll, 4);
 	if (mod_total_s) {
 		mod_total = atoi(mod_total_s);
 		free(mod_total_s); mod_total_s = NULL;
 	}
 
 	int mult = 1;
-	char *mult_s = extract(roll_exp, pattern_roll, 7);
+	char *mult_s = rgx_extract(roll_exp, pattern_roll, 7);
 	if (mult_s) {
 		mult = atoi(mult_s);
 		free(mult_s); mult_s = NULL;
@@ -63,39 +63,33 @@ struct RollDiceArgs get_dice_args(char *roll_exp)
  * example, 45%, where a d100 is rolled and the result is true if less than or
  * equal to 45).
  */
-struct TestArgs get_test_args(char *odds)
+struct DifficultyCheckArgs difficulty_check_args_get(char *odds)
 {
 	char *pattern_x_in_y = "^([[:digit:]]+)-in-([[:digit:]]+)$";
 	char *pattern_percent = "^([[:digit:]]+)%$";
 
-	struct TestArgs test;
+	struct DifficultyCheckArgs test;
 
-	if (is_present(pattern_x_in_y, odds)) {
-		char *target = extract(odds, pattern_x_in_y, 1);
-		char *die_size = extract(odds, pattern_x_in_y, 2);
+	if (rgx_match(odds, pattern_x_in_y)) {
+		char *target = rgx_extract(odds, pattern_x_in_y, 1);
+		char *die_size = rgx_extract(odds, pattern_x_in_y, 2);
 		
 		test.target = atoi(target);
 		test.die_size = atoi(die_size);
 
 		free(target); target = NULL;
 		free(die_size); die_size = NULL;
-	} else if (is_present(pattern_percent, odds)) {
-		char *target = extract(odds, pattern_percent, 1);
+	} else if (rgx_match(odds, pattern_percent)) {
+		char *target = rgx_extract(odds, pattern_percent, 1);
 
 		test.target = atoi(target);
 		test.die_size = 100;
 
 		free(target); target = NULL;
 	} else {
-		printf("Invalid input for get_test_args");
+		printf("Invalid input for difficulty_check_args_get");
 		exit(EXIT_FAILURE);
 	}
 
 	return test;
-}
-
-void print_test_args(struct TestArgs test)
-{
-	printf("[size: d%d] ", test.die_size);
-	printf("[target: %d]", test.target);
 }

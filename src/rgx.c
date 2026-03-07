@@ -4,23 +4,23 @@
  * Checks to see if a pattern is present in a provided string and returns true
  * if so.
  */
-bool is_present(char *pattern, char *str)
+bool rgx_match(char *source, char *pattern)
 {
-	regex_t reegex;
+	regex_t regex;
+	int reg_status;
+	bool match = false;
 
-	int value;
-	bool match;
+	reg_status = regcomp(&regex, pattern, REG_EXTENDED);
+	if (reg_status != 0) {
+		fprintf(stderr, "Could not compile regex\n");
+		return match;
+	}
 
-	value = regcomp(&reegex, pattern, REG_EXTENDED);
+	reg_status = regexec(&regex, source, 0, NULL, 0);
+	regfree(&regex);
 
-	value = regexec(&reegex, str, 0, NULL, 0);
-
-	if (value == 0) {
+	if (reg_status == 0) {
 		match = true;
-	} else if (value == REG_NOMATCH) {
-		match = false;
-	} else {
-		printf("An error occurred.\n");
 	}
 
 	return match;
@@ -32,59 +32,65 @@ bool is_present(char *pattern, char *str)
  * the group of the provided group_number. This function allocates memory via
  * the strdup() function and must be freed by the caller.
  */
-char *extract(char *source, char *pattern_rgx, int group_number)
+char *rgx_extract(char *source, char *pattern, int group_number)
 {
-	int number_of_parentheses = 0;
-	for (int i = 0; pattern_rgx[i] != '\0'; i++) {
-		if (pattern_rgx[i] == '(') {
+	int number_of_parentheses;
+	int max_matches;
+	int reti;
+	int start;
+	int end;
+	int length;
+	char *result;
+
+	number_of_parentheses = 0;
+	for (int i = 0; pattern[i] != '\0'; i++) {
+		if (pattern[i] == '(') {
 			number_of_parentheses++;
 		}
 	}
 
-	size_t max_matches = 1;
-	size_t max_groups = number_of_parentheses + 1;
-
-	regex_t compiled_rgx;
-	regmatch_t group_array[max_groups];
-
-	if (regcomp(&compiled_rgx, pattern_rgx, REG_EXTENDED)) {
-		printf("Could not compile regular expression.\n");
+	max_matches = number_of_parentheses + 1;
+	if (max_matches > RGX_MAX_MATCHES) {
+		printf("Too many match groups.\n");
 		return NULL;
-	};
-
-	char *cursor = source;
-	char *output = NULL;
-
-	for (unsigned int m = 0; m < max_matches; m++) {
-		if (regexec(&compiled_rgx, cursor, max_groups, group_array, 0)) {
-			break; // No more matches
-		}
-
-		unsigned int offset = 0;
-		for (unsigned int g = 0; g < max_groups; g++) {
-			if (g == 0) {
-				offset = group_array[g].rm_eo;
-			}
-
-			char cursor_copy[strlen(cursor) + 1];
-			strcpy(cursor_copy, cursor);
-			cursor_copy[group_array[g].rm_eo] = 0;
-
-			if (g == group_number &&
-			    group_array[g].rm_so != (size_t)-1) {
-				output = strdup(cursor_copy + group_array[g].rm_so);
-				if (output == NULL) {
-					printf("Memory allocation failed.\n");
-					exit(EXIT_FAILURE);
-				}
-			}
-		}
-		cursor += offset;
 	}
 
-	cursor = NULL;
+	regex_t regex;
+	regmatch_t matches[max_matches];
 
-	regfree(&compiled_rgx);
+	reti = regcomp(&regex, pattern, REG_EXTENDED);
+	if (reti) {
+		printf("Could not compile regular expression.\n");
+		return NULL;
+	}
 
-	return output;
+	reti = regexec(&regex, source, max_matches, matches, 0);
+	if (reti == REG_NOMATCH | reti != 0 | matches[group_number].rm_so == -1) {
+		regfree(&regex);
+		return NULL;
+	}
+
+	start = matches[group_number].rm_so;
+	end = matches[group_number].rm_eo;
+	length = end - start;
+
+	if (length > RGX_MAX_LENGTH) {
+		printf("Input length is too long.\n");
+		regfree(&regex);
+		return NULL;
+	}
+
+	result = malloc((length + 1) * sizeof(char));
+	if (result == NULL) {
+		regfree(&regex);
+		perror("Failed to allocate memory");
+		exit(EXIT_FAILURE);
+	}
+
+	strncpy(result, source + start, length);
+	result[length] = '\0';
+
+	regfree(&regex);
+
+	return result;
 }
