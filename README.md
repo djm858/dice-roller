@@ -48,26 +48,31 @@ make roll
 ```
 ./roll 3d6
 ```
+![3d6](./readme-img/3d6.png)
 
 - Roll four (4) 6-sided dice and drop the lowest value:
 ```
 ./roll 4d6 -d low
 ```
+![4d6](./readme-img/4d6.png)
 
 - Roll damage for a two-handed sword with a Strength modifier of +2:
 ```
 ./roll 1d10+2
 ```
+![TwoHandedSword](./readme-img/TwoHandedSword.png)
 
 - Roll the encounter size of a group of bandits in the wild:
 ```
 ./roll 1d6*10
 ```
+![BanditEncounter](./readme-img/BanditEncounter.png)
 
 - Roll the HP of an 8th-level Magic-User with a Constitution modifier of -1 in verbose mode:
 ```
 ./roll 8d4 -m -1 -v
 ```
+![MagicUserHP](./readme-img/MagicUserHP.png)
 
 # Uninstallation
 
