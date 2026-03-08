@@ -30,17 +30,9 @@ int main(int argc, char *argv[])
 	while ((opt = getopt(argc, argv, ":d:m:v")) != -1) {
 		switch (opt) {
 			case 'd':
-				if (strcmp("l", optarg) == 0 |
-				    strcmp("lo", optarg) == 0 |
-				    strcmp("low", optarg) == 0 |
-				    strcmp("lowest", optarg) == 0
-				) {
+				if (strcmp("low", optarg) == 0) {
 				    	drop = LOWEST;
-				} else if (strcmp("h", optarg) == 0 |
-				           strcmp("hi", optarg) == 0 |
-				           strcmp("high", optarg) == 0 |
-				           strcmp("highest", optarg) == 0
-				) {
+				} else if (strcmp("high", optarg) == 0) {
 				        drop = HIGHEST;
 				} else {
 					printf("Need to specify drop 'low' or 'high'.\n");

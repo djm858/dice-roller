@@ -158,7 +158,7 @@ float dice_roll_average_get_simple(struct DiceRollArgs roll)
 	return dice_roll_stats_calc(roll, avg);
 }
 
-double dice_roll_average_recursive_sum(struct DiceRollArgs roll, int dice_number, int to_drop, double sum_roll)
+double dice_roll_average_recursive_sum(struct DiceRollArgs roll, int dice_number, int to_drop, int sum_roll)
 {
 	if (dice_number > roll.number_of_dice) {
 		sum_roll -= to_drop;
