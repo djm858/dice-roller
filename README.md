@@ -42,6 +42,7 @@ make roll
 ```
 ./roll d10
 ```
+![d10](./readme-img/d10.png)
 
 - Roll three (3) 6-sided dice:
 ```
@@ -66,4 +67,12 @@ make roll
 - Roll the HP of an 8th-level Magic-User with a Constitution modifier of -1 in verbose mode:
 ```
 ./roll 8d4 -m -1 -v
+```
+
+# Uninstallation
+
+1. Remove the program with the provided make file:
+
+```
+make clean
 ```
