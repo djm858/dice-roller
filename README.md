@@ -74,7 +74,7 @@ make roll
 ```
 ![MagicUserHP](./readme-img/MagicUserHP.png)
 
-# Uninstallation
+## Uninstall
 
 1. Remove the program with the provided make file:
 
