@@ -25,9 +25,13 @@ bool rgx_match(char *source, char *pattern)
 
 /*
  * Finds patterns in the source string and assigns each group surrounded by
- * parentheses to separate group numbers. Extracts and returns the substring in
- * the group of the provided group_number. This function allocates memory via
- * the strdup() function and must be freed by the caller.
+ * parentheses to separate group numbers. Extracts the substring in
+ * the group of the provided group_number and attempts to copy it to the
+ * destination if enough space is provided. If it fails anywhere along the way
+ * it will not copy to the destination and will return a non-zero number. If it
+ * successfully writes to the destination it will return 0. The destination is
+ * typically a char array with a given buffer size (for example,
+ * char destination[dest_size]).
  */
 int rgx_extract(char *source, char *pattern, int group_number, char *destination, size_t dest_size)
 {

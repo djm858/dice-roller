@@ -5,6 +5,9 @@
 #include "random.h"
 #include "dicewrap.h"
 
+/*
+ * If an error occurs, this message will print while the programs exits.
+ */
 void main_error_print(char *program_name)
 {
 	char *msg = "Usage: %s 'roll_exp' [-d low/high] [-m mod_ea_die] [-v]\n";
@@ -12,6 +15,17 @@ void main_error_print(char *program_name)
 	exit(EXIT_FAILURE);
 }
 
+/*
+ * This program accepts as input a roll expression from the user (such as 2d8+2)
+ * and randomly rolls the resulting value, printing it to the terminal. It
+ * allows for optional arguments such as -m (ex. -m 2) to modify each individual
+ * die in the roll as is the case when adding Constition modifier to HP gains
+ * when leveling in a table-top RPG, or -d with either 'low' or 'high' (ex.
+ * -d low) to drop the lowest or highest rolled dice from the final result, or
+ * -v for verbose to print all the arguments of the given roll to the screen, as
+ *  well as interesting statistics like min, max, and average values of the
+ *  given roll expression.
+ */
 int main(int argc, char *argv[])
 {
 	int opt;

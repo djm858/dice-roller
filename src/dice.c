@@ -1,9 +1,9 @@
 #include "dice.h"
 
 /*
- * Mimics a die roll. For example, a six-sided would have size_of_die = 6. I'm
- * learning that this may be biased towards lower numbers? Consider researching
- * and implementing a non-biased fuction.
+ * Mimics a die roll. For example, a six-sided would have size_of_die = 6. This
+ * may be biased towards lower numbers? Consider researching and implementing a
+ * non-biased fuction.
  */
 int dice_roll_basic(int size_of_die)
 {
@@ -18,7 +18,7 @@ int dice_roll_basic(int size_of_die)
  * Rolls a given size of dice a given number of times and stores each roll in an
  * array. They need to be stored separately (as opposed to adding them together
  * and returning the sum) because sometimes modifiers and minimums need to be
- * applied to each roll. This functions dynamically allocates memory for the
+ * applied to each roll. This function dynamically allocates memory for the
  * array and returns a pointer to the array, so the caller must free the memory.
  */
 int *dice_array_roll_basic(int number_of_dice, int size_of_dice)
@@ -26,7 +26,7 @@ int *dice_array_roll_basic(int number_of_dice, int size_of_dice)
 	int *die_array = (int *)malloc(number_of_dice * sizeof(int));
 	if (die_array == NULL) {
 		printf("Memory allocation failed!\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	for (int i = 0; i < number_of_dice; i++) {
@@ -111,6 +111,13 @@ int dice_array_sum(int *int_array, int array_length)
 	return sum;
 }
 
+/*
+ * When calculating the min, max, or average roll value of any roll expression,
+ * the only variable is typically the base dice roll itself. Once that value is
+ * determined and provided (as the stat_value), the rest can easily be
+ * calculated as it is in this function. The min, max, and average functions
+ * will call this function for all similar calculations.
+ */
 float dice_roll_stats_calc(struct DiceRollArgs roll, float stat_value)
 {
 	stat_value += roll.mod_ea_die;
@@ -150,7 +157,9 @@ int dice_roll_maximum_get(struct DiceRollArgs roll)
 }
 
 /*
- * Calculates the average roll value from a given set of arguments.
+ * Calculates the average roll value from a given set of arguments. It is called
+ * _simple because in some conditions (when you drop low/high or have a negative
+ * modifier) a different, more complex calculation will be used.
  */
 float dice_roll_average_get_simple(struct DiceRollArgs roll)
 {
@@ -158,6 +167,19 @@ float dice_roll_average_get_simple(struct DiceRollArgs roll)
 	return dice_roll_stats_calc(roll, avg);
 }
 
+/*
+ * When a roll expression has a negative modifier, or drops the lowest/highest
+ * dice, the average value of the roll is not so easily calculated. This
+ * recursive function is then used to quickly simulate all possible roll
+ * combinations and returns the sum of all those roll iterations. It includes
+ * all possible calculations, such as dropping low/high, setting minimum values,
+ * and applying modifiers. It is recursive to allow any possible number_of_dice;
+ * however, this method can be slow when then number of dice and the size of the
+ * dice increase (such as for 9d8 and higher). To use, pass the DiceRollsArgs as
+ * normal, set dice_number = 1, to_drop = 0, and sum_roll = 0. To complete the
+ * calucation for the average, the caller must divide the returned
+ * sum_roll_all_iters with the total number of all iterations.
+ */
 double dice_roll_average_recursive_sum(struct DiceRollArgs roll, int dice_number, int to_drop, int sum_roll)
 {
 	if (dice_number > roll.number_of_dice) {
@@ -190,6 +212,15 @@ double dice_roll_average_recursive_sum(struct DiceRollArgs roll, int dice_number
 	return sum_roll_all_iters;
 }
 
+/*
+ * Returns the average value of a roll expression. The the expression does not
+ * drop low/high nor have any negative modifiers, it will utilize the quicker
+ * dice_roll_average_get_simple function. Otherwise, it will use the more
+ * intensive dice_roll_average_recursive_sum and divide that value by the total
+ * number of roll combinations to brute-force the average value. To prevent the
+ * user from locking the program in a long calculation, it will not return the
+ * average value of a non-simple roll expression that is higher than 9d8.
+ */
 float dice_roll_average_get(struct DiceRollArgs roll)
 {
 	double sum;
@@ -216,8 +247,8 @@ float dice_roll_average_get(struct DiceRollArgs roll)
  * a modifier for each individual dice (ie, Constitution modifier for health),
  * an overall modifier (ie, Strength modifier on a damage roll), and a
  * multiplier (ie 1d6*10). It also allows for optional arguments such as
- * dropping the lowest value (ie, 4d6 drop lowest for determining stats, or
- * rolling with advantage), and dropping the highest value (ie, rolling with
+ * dropping the lowest value (ie, 4d6 drop low for determining stats, or rolling
+ * with advantage), and dropping the highest value (ie, rolling with
  * disadvantage).
  */
 int dice_roll(struct DiceRollArgs roll)
@@ -248,6 +279,10 @@ int dice_roll(struct DiceRollArgs roll)
 	return total_roll;
 }
 
+/*
+ * Prints the arguments to the screen. Helpful for debugging to make sure the
+ * inputs of the roll are as expected.
+ */
 void dice_roll_args_print(struct DiceRollArgs roll)
 {
 	printf("[dice: %d] ", roll.number_of_dice);
@@ -268,6 +303,11 @@ void dice_roll_args_print(struct DiceRollArgs roll)
 	printf("\n");
 }
 
+/*
+ * Prints basic statistics of the roll expression, including min, max and
+ * average values. If the average value was not calculated, it will not print
+ * the average value.
+ */
 void dice_roll_stats_print(struct DiceRollArgs roll)
 {
 	float avg = dice_roll_average_get(roll);
