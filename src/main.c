@@ -1,16 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <time.h>
 #include <unistd.h>
+#include "random.h"
 #include "dicewrap.h"
-
-void random_seed_generate()
-{
-	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-	srand(ts.tv_nsec ^ getpid());
-}
 
 void main_error_print(char *program_name)
 {
