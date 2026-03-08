@@ -5,23 +5,21 @@
 #include <stdbool.h>
 #include <math.h>
 
-enum DropType {
+typedef enum DiceDrop {
 	NONE,
 	LOWEST,
 	HIGHEST
-};
+} DiceDrop;
 
-struct RollDiceArgs {
+typedef struct DiceRollArgs {
 	int number_of_dice;
 	int size_of_dice;
 	int mod_total;
 	int mod_ea_die;
 	int mult;
-	enum DropType drop;
-};
+	enum DiceDrop drop;
+} DiceRollArgs;
 
-int minimum();
-int maximum();
 int dice_roll_basic();
 float dice_roll_average_get();
 int dice_roll_minimum_get();

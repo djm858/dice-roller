@@ -3,4 +3,6 @@
 #include "dice.h"
 #include "rgx.h"
 
-struct RollDiceArgs dwrap_roll_args_get();
+#define DWRAP_MAX_LENGTH 10
+
+struct DiceRollArgs dwrap_roll_args_get();

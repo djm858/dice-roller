@@ -10,4 +10,4 @@
 #define RGX_MAX_MATCHES 10
 
 bool rgx_match();
-char *rgx_extract();
+int rgx_extract();

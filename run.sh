@@ -1,1 +1,1 @@
-make -s roll && ./roll 3d4+1*3 -m -1 -d l -v && make -s clean
+make -s roll && ./roll 9d4 -m -3 -v && make -s clean

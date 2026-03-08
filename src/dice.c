@@ -1,22 +1,6 @@
 #include "dice.h"
 
 /*
- * Simple function to return the minimum value between two values
- */
-int minimum(int x, int y)
-{
-	return (x > y) ? y : x;
-}
-
-/*
- * Simple function to return the maximum value between two values
- */
-int maximum(int x, int y)
-{
-	return (x > y) ? x : y;
-}
-
-/*
  * Mimics a die roll. For example, a six-sided would have size_of_die = 6. I'm
  * learning that this may be biased towards lower numbers? Consider researching
  * and implementing a non-biased fuction.
@@ -75,7 +59,7 @@ int dice_array_minimum_get(int *int_array, int array_length)
 		if (i == 0) {
 			lowest = int_array[i];
 		} else {
-			lowest = minimum(lowest, int_array[i]);
+			lowest = fmin(lowest, int_array[i]);
 		}
 	}
 
@@ -94,7 +78,7 @@ int dice_array_maximum_get(int *int_array, int array_length)
 		if (i == 0) {
 			highest = int_array[i];
 		} else {
-			highest = maximum(highest, int_array[i]);
+			highest = fmax(highest, int_array[i]);
 		}
 	}
 
@@ -109,7 +93,7 @@ int dice_array_maximum_get(int *int_array, int array_length)
 void dice_array_minimum_set(int *int_array, int array_length, int min_value)
 {
 	for (int i = 0; i < array_length; i++) {
-		int_array[i] = maximum(int_array[i], min_value);
+		int_array[i] = fmax(int_array[i], min_value);
 	}
 }
 
@@ -127,10 +111,10 @@ int dice_array_sum(int *int_array, int array_length)
 	return sum;
 }
 
-float dice_roll_stats_calc(struct RollDiceArgs roll, float stat_value)
+float dice_roll_stats_calc(struct DiceRollArgs roll, float stat_value)
 {
 	stat_value += roll.mod_ea_die;
-	stat_value = maximum(1, stat_value);
+	stat_value = fmax(1, stat_value);
 
 	stat_value *= roll.number_of_dice;
 	switch (roll.drop) {
@@ -140,7 +124,7 @@ float dice_roll_stats_calc(struct RollDiceArgs roll, float stat_value)
 			break;
 	}
 	stat_value += roll.mod_total;
-	stat_value = maximum(1, stat_value);
+	stat_value = fmax(1, stat_value);
 
 	stat_value *= roll.mult;
 
@@ -150,7 +134,7 @@ float dice_roll_stats_calc(struct RollDiceArgs roll, float stat_value)
 /*
  * Calculates the min roll value from a given set of arguments.
  */
-int dice_roll_minimum_get(struct RollDiceArgs roll)
+int dice_roll_minimum_get(struct DiceRollArgs roll)
 {
 	int min = 1;
 	return dice_roll_stats_calc(roll, min);
@@ -159,7 +143,7 @@ int dice_roll_minimum_get(struct RollDiceArgs roll)
 /*
  * Calculates the max roll value from a given set of arguments.
  */
-int dice_roll_maximum_get(struct RollDiceArgs roll)
+int dice_roll_maximum_get(struct DiceRollArgs roll)
 {
 	int max = roll.size_of_dice;
 	return dice_roll_stats_calc(roll, max);
@@ -168,18 +152,18 @@ int dice_roll_maximum_get(struct RollDiceArgs roll)
 /*
  * Calculates the average roll value from a given set of arguments.
  */
-float dice_roll_average_get_simple(struct RollDiceArgs roll)
+float dice_roll_average_get_simple(struct DiceRollArgs roll)
 {
 	float avg = (roll.size_of_dice + 1.0) / 2.0;
 	return dice_roll_stats_calc(roll, avg);
 }
 
-double dice_roll_average_recursive_sum(struct RollDiceArgs roll, int dice_number, int to_drop, int sum_roll)
+double dice_roll_average_recursive_sum(struct DiceRollArgs roll, int dice_number, int to_drop, double sum_roll)
 {
 	if (dice_number > roll.number_of_dice) {
 		sum_roll -= to_drop;
 		sum_roll += roll.mod_total;
-		sum_roll = maximum(1, sum_roll);
+		sum_roll = fmax(1, sum_roll);
 		sum_roll *= roll.mult;
 		return sum_roll;
 	}
@@ -189,15 +173,15 @@ double dice_roll_average_recursive_sum(struct RollDiceArgs roll, int dice_number
 	int to_drop_single_iter = to_drop;
 
 	for (int i = roll.size_of_dice; i > 0; i--) {
-		int current_roll = maximum(1, i + roll.mod_ea_die);
+		int current_roll = fmax(1, i + roll.mod_ea_die);
 		sum_roll = sum_roll_single_iter + current_roll;
-		if (dice_number == 1) {
+		if (dice_number == 1 & roll.drop != NONE) {
 			to_drop = current_roll;
 		} else {
 			if (roll.drop == LOWEST) {
-				to_drop = minimum(current_roll, to_drop);
+				to_drop = fmin(current_roll, to_drop);
 			} else if (roll.drop == HIGHEST) {
-				to_drop = maximum(current_roll, to_drop_single_iter);
+				to_drop = fmax(current_roll, to_drop_single_iter);
 			}
 		}
 		sum_roll_all_iters += dice_roll_average_recursive_sum(roll, dice_number + 1, to_drop, sum_roll);
@@ -206,14 +190,25 @@ double dice_roll_average_recursive_sum(struct RollDiceArgs roll, int dice_number
 	return sum_roll_all_iters;
 }
 
-float dice_roll_average_get(struct RollDiceArgs roll)
+float dice_roll_average_get(struct DiceRollArgs roll)
 {
+	double sum;
+	double iterations;
+	float average;
+
 	if (roll.mod_ea_die >= 0 & roll.mod_total >= 0 & roll.drop == NONE) {
 		return dice_roll_average_get_simple(roll);
 	}
-	double sum = dice_roll_average_recursive_sum(roll, 1, 0, 0);
-	double iterations = pow(roll.size_of_dice, roll.number_of_dice);
-	return (float)sum / iterations;
+
+	iterations = pow(roll.size_of_dice, roll.number_of_dice);
+	if (iterations > pow(8, 9)) {
+		printf("Too large to calculate average.\n");
+		return 0;
+	}
+	sum = dice_roll_average_recursive_sum(roll, 1, 0, 0);
+	average = (float)sum / iterations;
+
+	return average;
 }
 
 /*
@@ -225,7 +220,7 @@ float dice_roll_average_get(struct RollDiceArgs roll)
  * rolling with advantage), and dropping the highest value (ie, rolling with
  * disadvantage).
  */
-int dice_roll(struct RollDiceArgs roll)
+int dice_roll(struct DiceRollArgs roll)
 {
 	int *die_array = dice_array_roll_basic(roll.number_of_dice, roll.size_of_dice);
 	dice_array_scalar_add(die_array, roll.number_of_dice, roll.mod_ea_die);
@@ -246,14 +241,14 @@ int dice_roll(struct RollDiceArgs roll)
 	free(die_array); die_array = NULL;
 
 	total_roll += roll.mod_total;
-	total_roll = maximum(1, total_roll);
+	total_roll = fmax(1, total_roll);
 
 	total_roll *= roll.mult;
 
 	return total_roll;
 }
 
-void dice_roll_args_print(struct RollDiceArgs roll)
+void dice_roll_args_print(struct DiceRollArgs roll)
 {
 	printf("[dice: %d] ", roll.number_of_dice);
 	printf("[size: d%d] ", roll.size_of_dice);
@@ -273,10 +268,14 @@ void dice_roll_args_print(struct RollDiceArgs roll)
 	printf("\n");
 }
 
-void dice_roll_stats_print(struct RollDiceArgs roll)
+void dice_roll_stats_print(struct DiceRollArgs roll)
 {
 	float avg = dice_roll_average_get(roll);
 	int min = dice_roll_minimum_get(roll);
 	int max = dice_roll_maximum_get(roll);
-	printf("[Min: %d] [Max: %d] [Avg: %.3f]\n", min, max, avg);
+	printf("[min: %d] [max: %d]", min, max);
+	if (avg > 0) {
+		printf(" [avg: %.3f]", avg);
+	}
+	printf("\n");
 }

@@ -7,17 +7,14 @@
 bool rgx_match(char *source, char *pattern)
 {
 	regex_t regex;
-	int reg_status;
 	bool match = false;
 
-	reg_status = regcomp(&regex, pattern, REG_EXTENDED);
-	if (reg_status != 0) {
+	if (regcomp(&regex, pattern, REG_EXTENDED)) {
 		fprintf(stderr, "Could not compile regex.\n");
-		return match;
+		return false;
 	}
 
-	reg_status = regexec(&regex, source, 0, NULL, 0);
-	if (reg_status == 0) {
+	if (regexec(&regex, source, 0, NULL, 0) == 0) {
 		match = true;
 	}
 
@@ -32,48 +29,37 @@ bool rgx_match(char *source, char *pattern)
  * the group of the provided group_number. This function allocates memory via
  * the strdup() function and must be freed by the caller.
  */
-char *rgx_extract(char *source, char *pattern, int group_number)
+int rgx_extract(char *source, char *pattern, int group_number, char *destination, size_t dest_size)
 {
-	int reti;
-	int start;
-	int end;
-	int length;
-	char *result;
+	int status = 0;
 	regex_t regex;
 	regmatch_t matches[RGX_MAX_MATCHES];
 
-	reti = regcomp(&regex, pattern, REG_EXTENDED);
-	if (reti) {
+	status = regcomp(&regex, pattern, REG_EXTENDED);
+	if (status) {
 		printf("Could not compile regular expression.\n");
-		return NULL;
+		return status;
 	}
 
-	reti = regexec(&regex, source, RGX_MAX_MATCHES, matches, 0);
-	if (reti | matches[group_number].rm_so == -1) {
-		regfree(&regex);
-		return NULL;
-	}
+	status = regexec(&regex, source, RGX_MAX_MATCHES, matches, 0);
+	if (status == 0) {
+		int start;
+		int end;
+		int length;
 
-	start = matches[group_number].rm_so;
-	end = matches[group_number].rm_eo;
-	length = end - start;
-	if (length > RGX_MAX_LENGTH) {
-		regfree(&regex);
-		printf("Input length is too long.\n");
-		return NULL;
-	}
+		start = matches[group_number].rm_so;
+		end = matches[group_number].rm_eo;
+		length = end - start;
+		if (dest_size < length + 1) {
+			printf("Input length is too long.\n");
+			return -1;
+		}
 
-	result = malloc((length + 1) * sizeof(char));
-	if (result == NULL) {
-		regfree(&regex);
-		perror("Failed to allocate memory");
-		exit(EXIT_FAILURE);
+		strncpy(destination, source + start, length);
+		destination[length] = '\0';
 	}
-
-	strncpy(result, source + start, length);
-	result[length] = '\0';
 
 	regfree(&regex);
 
-	return result;
+	return status;
 }

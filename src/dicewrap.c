@@ -7,46 +7,48 @@
  * dice.c functions. It also allows the user to write 'd%' and it will interpret
  * it as a d100 roll.
  */
-struct RollDiceArgs dwrap_roll_args_get(char *roll_exp)
+struct DiceRollArgs dwrap_roll_args_get(char *roll_exp)
 {
-	char *pattern_roll = "([[:digit:]]+)?"
-	                     "(d(%|[[:digit:]]+))"
-	                     "([:+-:][[:digit:]]+)?"
-	                     "(([:*:]|×|x)([[:digit:]]+))?";
-
+	char buffer[DWRAP_MAX_LENGTH];
 	int number_of_dice = 1;
-	char *number_of_dice_s = rgx_extract(roll_exp, pattern_roll, 1);
-	if (number_of_dice_s) {
-		number_of_dice = atoi(number_of_dice_s);
-		free(number_of_dice_s); number_of_dice_s = NULL;
-	}
-
 	int size_of_dice;
-	char *size_of_dice_s = rgx_extract(roll_exp, pattern_roll, 3);
-	if (size_of_dice_s) {
-		if (!strcmp(size_of_dice_s, "%")) {
-			size_of_dice = 100;
-		} else {
-			size_of_dice = atoi(size_of_dice_s);
-		}
-		free(size_of_dice_s); size_of_dice_s = NULL;
-	}
-
 	int mod_total = 0;
-	char *mod_total_s = rgx_extract(roll_exp, pattern_roll, 4);
-	if (mod_total_s) {
-		mod_total = atoi(mod_total_s);
-		free(mod_total_s); mod_total_s = NULL;
-	}
-
 	int mult = 1;
-	char *mult_s = rgx_extract(roll_exp, pattern_roll, 7);
-	if (mult_s) {
-		mult = atoi(mult_s);
-		free(mult_s); mult_s = NULL;
+	struct DiceRollArgs roll;
+	char *pattern_roll = "^([[:digit:]]+)?"
+	                     "([dD](%|[[:digit:]]+))"
+	                     "([:+-:][[:digit:]]+)?"
+	                     "(([:*:]|×|[xX])([[:digit:]]+))?$";
+
+	if (rgx_extract(roll_exp, pattern_roll, 1, buffer, sizeof(buffer)) == 0) {
+		if (strnlen(buffer, sizeof(buffer)) > 0) {
+			number_of_dice = atoi(buffer);
+		}
 	}
 
-	struct RollDiceArgs roll = {
+	if (rgx_extract(roll_exp, pattern_roll, 3, buffer, sizeof(buffer)) == 0) {
+		if (strnlen(buffer, sizeof(buffer)) > 0) {
+			if (strcmp(buffer, "%") == 0) {
+				size_of_dice = 100;
+			} else {
+				size_of_dice = atoi(buffer);
+			}
+		}
+	}
+
+	if (rgx_extract(roll_exp, pattern_roll, 4, buffer, sizeof(buffer)) == 0) {
+		if (strnlen(buffer, sizeof(buffer)) > 0) {
+			mod_total = atoi(buffer);
+		}
+	}
+
+	if (rgx_extract(roll_exp, pattern_roll, 7, buffer, sizeof(buffer)) == 0) {
+		if (strnlen(buffer, sizeof(buffer)) > 0) {
+			mult = atoi(buffer);
+		}
+	}
+
+	roll = (DiceRollArgs){
 		.number_of_dice = number_of_dice,
 		.size_of_dice = size_of_dice,
 		.mod_total = mod_total,
