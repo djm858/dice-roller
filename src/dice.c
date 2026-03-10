@@ -209,9 +209,9 @@ double dice_roll_average_recursive_sum(struct DiceRollArgs roll, int dice_number
 {
 	int i;
 	int current_roll;
-	int sum_roll_single_iter;
-	double sum_roll_all_iters;
-	int to_drop_single_iter;
+	int sum_roll_single_iter = sum_roll;
+	double sum_roll_all_iters = 0;
+	int to_drop_single_iter = to_drop;
 
 	if (dice_number > roll.number_of_dice) {
 		sum_roll -= to_drop;
@@ -220,10 +220,6 @@ double dice_roll_average_recursive_sum(struct DiceRollArgs roll, int dice_number
 		sum_roll *= roll.mult;
 		return sum_roll;
 	}
-
-	sum_roll_single_iter = sum_roll;
-	sum_roll_all_iters = 0;
-	to_drop_single_iter = to_drop;
 
 	for (i = roll.size_of_dice; i > 0; i--) {
 		current_roll = max(1, i + roll.mod_ea_die);
@@ -287,9 +283,8 @@ int dice_roll(struct DiceRollArgs roll)
 	int total_roll;
 	int lowest;
 	int highest;
-	int *die_array;
-	
-	die_array = dice_array_roll_basic(roll.number_of_dice, roll.size_of_dice);
+	int *die_array = dice_array_roll_basic(roll.number_of_dice, roll.size_of_dice);
+
 	dice_array_scalar_add(die_array, roll.number_of_dice, roll.mod_ea_die);
 	dice_array_minimum_set(die_array, roll.number_of_dice, 1);
 
