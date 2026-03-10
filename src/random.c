@@ -15,4 +15,3 @@ void random_seed_generate()
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	srand(ts.tv_nsec ^ getpid());
 }
-

@@ -82,7 +82,7 @@ It allows users to provide typical dice roll expressions (such as 2d8+3) and the
 
 ## Uninstall
 
-1. Remove the program with the provided make file:
+1. Remove the program with the provided make file from the root directory:
 
     ```
     make clean
