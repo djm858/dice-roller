@@ -1,6 +1,20 @@
 #include "dice.h"
 
 /*
+ * Returns the lowest of two values.
+ */
+double min(double a, double b) {
+	return (a < b) ? a : b;
+}
+
+/*
+ * Returns the highest of two values.
+ */
+double max(double a, double b) {
+	return (a > b) ? a : b;
+}
+
+/*
  * Mimics a die roll. For example, a six-sided would have size_of_die = 6. This
  * may be biased towards lower numbers? Consider researching and implementing a
  * non-biased fuction.
@@ -23,13 +37,15 @@ int dice_roll_basic(int size_of_die)
  */
 int *dice_array_roll_basic(int number_of_dice, int size_of_dice)
 {
+	int i;
+
 	int *die_array = (int *)malloc(number_of_dice * sizeof(int));
 	if (die_array == NULL) {
 		printf("Memory allocation failed!\n");
 		exit(EXIT_FAILURE);
 	}
 
-	for (int i = 0; i < number_of_dice; i++) {
+	for (i = 0; i < number_of_dice; i++) {
 		die_array[i] = dice_roll_basic(size_of_dice);
 	}
 
@@ -42,7 +58,9 @@ int *dice_array_roll_basic(int number_of_dice, int size_of_dice)
  */
 void dice_array_scalar_add(int *array_data, int array_length, int scalar)
 {
-	for (int i = 0; i < array_length; i++) {
+	int i;
+
+	for (i = 0; i < array_length; i++) {
 		array_data[i] += scalar;
 	}
 }
@@ -53,13 +71,14 @@ void dice_array_scalar_add(int *array_data, int array_length, int scalar)
  */
 int dice_array_minimum_get(int *int_array, int array_length)
 {
+	int i;
 	int lowest;
 
-	for (int i = 0; i < array_length; i++) {
+	for (i = 0; i < array_length; i++) {
 		if (i == 0) {
 			lowest = int_array[i];
 		} else {
-			lowest = fmin(lowest, int_array[i]);
+			lowest = min(lowest, int_array[i]);
 		}
 	}
 
@@ -72,13 +91,14 @@ int dice_array_minimum_get(int *int_array, int array_length)
  */
 int dice_array_maximum_get(int *int_array, int array_length)
 {
+	int i;
 	int highest;
 
-	for (int i = 0; i < array_length; i++) {
+	for (i = 0; i < array_length; i++) {
 		if (i == 0) {
 			highest = int_array[i];
 		} else {
-			highest = fmax(highest, int_array[i]);
+			highest = max(highest, int_array[i]);
 		}
 	}
 
@@ -92,8 +112,10 @@ int dice_array_maximum_get(int *int_array, int array_length)
  */
 void dice_array_minimum_set(int *int_array, int array_length, int min_value)
 {
-	for (int i = 0; i < array_length; i++) {
-		int_array[i] = fmax(int_array[i], min_value);
+	int i;
+
+	for (i = 0; i < array_length; i++) {
+		int_array[i] = max(int_array[i], min_value);
 	}
 }
 
@@ -102,9 +124,10 @@ void dice_array_minimum_set(int *int_array, int array_length, int min_value)
  */
 int dice_array_sum(int *int_array, int array_length)
 {
+	int i;
 	int sum = 0;
 
-	for (int i = 0; i < array_length; i++) {
+	for (i = 0; i < array_length; i++) {
 		sum += int_array[i];
 	}
 
@@ -121,17 +144,19 @@ int dice_array_sum(int *int_array, int array_length)
 float dice_roll_stats_calc(struct DiceRollArgs roll, float stat_value)
 {
 	stat_value += roll.mod_ea_die;
-	stat_value = fmax(1, stat_value);
+	stat_value = max(1, stat_value);
 
 	stat_value *= roll.number_of_dice;
 	switch (roll.drop) {
+		case NONE:
+			break;
 		case LOWEST:
 		case HIGHEST:
 			stat_value -= stat_value / roll.number_of_dice;
 			break;
 	}
 	stat_value += roll.mod_total;
-	stat_value = fmax(1, stat_value);
+	stat_value = max(1, stat_value);
 
 	stat_value *= roll.mult;
 
@@ -182,28 +207,34 @@ float dice_roll_average_get_simple(struct DiceRollArgs roll)
  */
 double dice_roll_average_recursive_sum(struct DiceRollArgs roll, int dice_number, int to_drop, int sum_roll)
 {
+	int i;
+	int current_roll;
+	int sum_roll_single_iter;
+	double sum_roll_all_iters;
+	int to_drop_single_iter;
+
 	if (dice_number > roll.number_of_dice) {
 		sum_roll -= to_drop;
 		sum_roll += roll.mod_total;
-		sum_roll = fmax(1, sum_roll);
+		sum_roll = max(1, sum_roll);
 		sum_roll *= roll.mult;
 		return sum_roll;
 	}
 
-	int sum_roll_single_iter = sum_roll;
-	double sum_roll_all_iters = 0;
-	int to_drop_single_iter = to_drop;
+	sum_roll_single_iter = sum_roll;
+	sum_roll_all_iters = 0;
+	to_drop_single_iter = to_drop;
 
-	for (int i = roll.size_of_dice; i > 0; i--) {
-		int current_roll = fmax(1, i + roll.mod_ea_die);
+	for (i = roll.size_of_dice; i > 0; i--) {
+		current_roll = max(1, i + roll.mod_ea_die);
 		sum_roll = sum_roll_single_iter + current_roll;
-		if (dice_number == 1 & roll.drop != NONE) {
+		if ((dice_number == 1) & (roll.drop != NONE)) {
 			to_drop = current_roll;
 		} else {
 			if (roll.drop == LOWEST) {
-				to_drop = fmin(current_roll, to_drop);
+				to_drop = min(current_roll, to_drop);
 			} else if (roll.drop == HIGHEST) {
-				to_drop = fmax(current_roll, to_drop_single_iter);
+				to_drop = max(current_roll, to_drop_single_iter);
 			}
 		}
 		sum_roll_all_iters += dice_roll_average_recursive_sum(roll, dice_number + 1, to_drop, sum_roll);
@@ -227,7 +258,7 @@ float dice_roll_average_get(struct DiceRollArgs roll)
 	double iterations;
 	float average;
 
-	if (roll.mod_ea_die >= 0 & roll.mod_total >= 0 & roll.drop == NONE) {
+	if ((roll.mod_ea_die >= 0) & (roll.mod_total >= 0) & (roll.drop == NONE)) {
 		return dice_roll_average_get_simple(roll);
 	}
 
@@ -253,18 +284,25 @@ float dice_roll_average_get(struct DiceRollArgs roll)
  */
 int dice_roll(struct DiceRollArgs roll)
 {
-	int *die_array = dice_array_roll_basic(roll.number_of_dice, roll.size_of_dice);
+	int total_roll;
+	int lowest;
+	int highest;
+	int *die_array;
+	
+	die_array = dice_array_roll_basic(roll.number_of_dice, roll.size_of_dice);
 	dice_array_scalar_add(die_array, roll.number_of_dice, roll.mod_ea_die);
 	dice_array_minimum_set(die_array, roll.number_of_dice, 1);
 
-	int total_roll = dice_array_sum(die_array, roll.number_of_dice);
+	total_roll = dice_array_sum(die_array, roll.number_of_dice);
 	switch (roll.drop) {
+		case NONE:
+			break;
 		case LOWEST:
-			int lowest = dice_array_minimum_get(die_array, roll.number_of_dice);
+			lowest = dice_array_minimum_get(die_array, roll.number_of_dice);
 			total_roll -= lowest;
 			break;
 		case HIGHEST:
-			int highest = dice_array_maximum_get(die_array, roll.number_of_dice);
+			highest = dice_array_maximum_get(die_array, roll.number_of_dice);
 			total_roll -= highest;
 			break;
 	}
@@ -272,7 +310,7 @@ int dice_roll(struct DiceRollArgs roll)
 	free(die_array); die_array = NULL;
 
 	total_roll += roll.mod_total;
-	total_roll = fmax(1, total_roll);
+	total_roll = max(1, total_roll);
 
 	total_roll *= roll.mult;
 

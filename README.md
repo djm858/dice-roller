@@ -31,48 +31,54 @@ It allows users to provide typical dice roll expressions (such as 2d8+3) and the
 3. Compile the program with the provided make file:
 
     ```
-    make roll
+    make
     ```
 
 ## Operation
 
-1. Run the program with a roll expression and optional arguments:
+1. Navigate to the project bin directory:
+
+    ```
+    cd bin
+    ```
+    
+2. Run the program with a roll expression and optional arguments:
 
     - Roll a single 10-sided die:
         ```
         ./roll d10
         ```
-        ![d10](./readme-img/d10.png)
+        ![d10](docs/assets/d10.png)
 
     - Roll three (3) 6-sided dice:
         ```
         ./roll 3d6
         ```
-        ![3d6](./readme-img/3d6.png)
+        ![3d6](docs/assets/3d6.png)
 
     - Roll four (4) 6-sided dice and drop the lowest value:
         ```
         ./roll 4d6 -d low
         ```
-        ![4d6](./readme-img/4d6.png)
+        ![4d6](docs/assets/4d6.png)
 
     - Roll damage for a two-handed sword with a Strength modifier of +2:
         ```
         ./roll 1d10+2
         ```
-        ![TwoHandedSword](./readme-img/TwoHandedSword.png)
+        ![TwoHandedSword](docs/assets/TwoHandedSword.png)
 
     - Roll the encounter size of a group of bandits in the wild:
         ```
         ./roll 1d6*10
         ```
-        ![BanditEncounter](./readme-img/BanditEncounter.png)
+        ![BanditEncounter](docs/assets/BanditEncounter.png)
 
     - Roll the HP of an 8th-level Magic-User with a Constitution modifier of -1 in verbose mode:
         ```
         ./roll 8d4 -m -1 -v
         ```
-        ![MagicUserHP](./readme-img/MagicUserHP.png)
+        ![MagicUserHP](docs/assets/MagicUserHP.png)
 
 ## Uninstall
 

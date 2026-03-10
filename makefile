@@ -1,24 +1,39 @@
-# Declaration of variables
-SRC_DIR := src
-INCLUDE_DIR := include
-CC = gcc -I$(INCLUDE_DIR)
-CC_FLAGS = -w -Werror -Wall -Wpedantic -std=c99
-LD_FLAGS = -lm
+# Compiler and Flags
+CC          := gcc
+CFLAGS      := -Wpedantic -Wall -Wextra -Werror -g -Iinclude
+LDFLAGS     := -lm
 
-# File names
-EXEC = roll
-# Incorporates all the files with .c extension
-SOURCES = $(wildcard $(SRC_DIR)/*.c)
-OBJECTS = $(SOURCES:.c=.o)
+# Directories
+SRC_DIR     := src
+BUILD_DIR   := build
+BIN_DIR     := bin
 
-# Main target
-$(EXEC): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(EXEC) $(LD_FLAGS)
-	
-# To obtain object files
-%.0: %.c
-	$(CC) -c $(CC_FLAGS) $< -o $@
+# Target executable name
+TARGET      := $(BIN_DIR)/roll
 
-# To remove generated files
+# Find all source files in SRC_DIR
+SRCS        := $(wildcard $(SRC_DIR)/*.c)
+# Convert source file list to object file list in BUILD_DIR
+OBJS        := $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
+
+# Default rule: build the executable
+all: prepare $(TARGET)
+
+# Create necessary directories
+prepare:
+	@mkdir -p $(BUILD_DIR) $(BIN_DIR)
+
+# Link object files into the final executable
+$(TARGET): $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+
+# Compile each .c file into a .o file
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Clean up build artifacts
 clean:
-	rm -f $(EXEC) $(OBJECTS)
+	@echo "Cleaning up..."
+	rm -rf $(BUILD_DIR) $(BIN_DIR)
+
+.PHONY: all prepare clean

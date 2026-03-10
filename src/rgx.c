@@ -54,7 +54,7 @@ int rgx_extract(char *source, char *pattern, int group_number, char *destination
 		start = matches[group_number].rm_so;
 		end = matches[group_number].rm_eo;
 		length = end - start;
-		if (dest_size < length + 1) {
+		if ((int)dest_size < length + 1) {
 			printf("Input length is too long.\n");
 			return -1;
 		}

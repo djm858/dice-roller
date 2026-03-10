@@ -48,12 +48,10 @@ struct DiceRollArgs dwrap_roll_args_get(char *roll_exp)
 		}
 	}
 
-	roll = (DiceRollArgs){
-		.number_of_dice = number_of_dice,
-		.size_of_dice = size_of_dice,
-		.mod_total = mod_total,
-		.mult = mult
-	};
+	roll.number_of_dice = number_of_dice;
+	roll.size_of_dice = size_of_dice;
+	roll.mod_total = mod_total;
+	roll.mult = mult;
 
 	return roll;
 }
