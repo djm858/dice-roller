@@ -72,7 +72,7 @@ It allows users to provide typical dice roll expressions (such as 2d8+3) and the
         ```
         ./roll d%
         ```
-        ![d%](docs/assets/d%.png)
+        ![dperc](docs/assets/dperc.png)
 
     - Roll damage for a two-handed sword with a Strength modifier of +2:
         ```
