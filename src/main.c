@@ -2,8 +2,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include "text.h"
+#include "queue.h"
 #include "random.h"
 #include "dicewrap.h"
+
+#define ARG_MAX_LENGTH 15
 
 /*
  * If an error occurs, this message will print while the programs exits.
@@ -28,7 +32,8 @@ void main_error_print(char *program_name)
  */
 int main(int argc, char *argv[])
 {
-	int opt;
+	int i;
+	struct Queue *queue;
 	int mod_ea_die = 0;
 	bool verbose = false;
 	enum DiceDrop drop = NONE;
@@ -41,61 +46,61 @@ int main(int argc, char *argv[])
 
 	random_seed_generate();
 
-	while ((opt = getopt(argc, argv, ":d:m:v")) != -1) {
-		switch (opt) {
-			case 'd':
-				if (strcmp("low", optarg) == 0) {
-				    	drop = LOWEST;
-				} else if (strcmp("high", optarg) == 0) {
-				        drop = HIGHEST;
-				} else {
-					printf("Need to specify drop 'low' or 'high'.\n");
-					main_error_print(argv[0]);
-				}
-				break;
-			case 'm':
-				if (!rgx_match(optarg, pattern_mod)) {
-					printf("The modifier for each dice must be an integer.\n");
-					main_error_print(argv[0]);
-				}
-				mod_ea_die = atoi(optarg);
-				break;
-			case 'v':
-				verbose = true;
-				break;
-			case ':':
-			default:
+	queue = queue_new(2);
+
+	for (i = 1; i < argc; i++) {
+		if (strlen_safe(argv[i], ARG_MAX_LENGTH) >= ARG_MAX_LENGTH) {
+			printf("Arg is too long.\n");
+			main_error_print(argv[0]);
+		}
+
+		if (strcmp("-d", argv[i]) == 0) {
+			if (strcmp("low", argv[i + 1]) == 0) {
+				drop = LOWEST;
+				i++;
+			} else if (strcmp("high", argv[i + 1]) == 0) {
+				drop = HIGHEST;
+				i++;
+			} else {
+				printf("Need to specify drop 'low' or 'high'.\n");
 				main_error_print(argv[0]);
-		}
-	}
-
-	for (; optind < argc; optind++) {
-		char *roll_exp;
-
-		if (strnlen(argv[optind], RGX_MAX_LENGTH) >= RGX_MAX_LENGTH) {
-			printf("Roll expression is too long.\n");
-			main_error_print(argv[0]);
-		}
-		roll_exp = argv[optind];
-		if (rgx_match(roll_exp, pattern_roll)) {
-			int result;
-			struct DiceRollArgs roll;
-
-			roll = dwrap_roll_args_get(roll_exp);
-			roll.mod_ea_die = mod_ea_die;
-			roll.drop = drop;
-			result = dice_roll(roll);
-			printf("Rolling %s...\n", roll_exp);
-			if (verbose) {
-				dice_roll_args_print(roll);
-				dice_roll_stats_print(roll);
 			}
-			printf("You rolled %d.\n", result);
+		} else if (strcmp("-m", argv[i]) == 0) {
+			if (!rgx_match(argv[i + 1], pattern_mod)) {
+				printf("The modifier for each dice must be an integer.\n");
+				main_error_print(argv[0]);
+			}
+			mod_ea_die = atoi(argv[i + 1]);
+			i++;
+		} else if (strcmp("-v", argv[i]) == 0) {
+			verbose = true;
+		} else if (rgx_match(argv[i], pattern_roll)) {
+			queue_push(queue, argv[i]);
 		} else {
-			printf("Roll expression does not match standard format.\n");
+			printf("Unknown argument.\n");
 			main_error_print(argv[0]);
 		}
 	}
+
+	while (queue->count > 0) {
+		char *roll_exp;
+		int result;
+		struct DiceRollArgs roll;
+		
+		roll_exp = queue_pop(queue);
+		roll = dwrap_roll_args_get(roll_exp);
+		roll.mod_ea_die = mod_ea_die;
+		roll.drop = drop;
+		result = dice_roll(roll);
+		printf("Rolling %s...\n", roll_exp);
+		if (verbose) {
+			dice_roll_args_print(roll);
+			dice_roll_stats_print(roll);
+		}
+		printf("You rolled %d.\n", result);
+	}
+
+	queue_free(queue);
 
 	return 0;
 }

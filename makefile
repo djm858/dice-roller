@@ -1,6 +1,6 @@
 # Compiler and Flags
 CC          := gcc
-CFLAGS      := -Wpedantic -Wall -Wextra -Werror -g -Iinclude
+CFLAGS      := -std=c89 -Wpedantic -Wall -Wextra -Werror -g -Iinclude
 LDFLAGS     := -lm
 
 # Directories

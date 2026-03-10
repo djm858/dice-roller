@@ -20,10 +20,10 @@ typedef struct DiceRollArgs {
 	enum DiceDrop drop;
 } DiceRollArgs;
 
-int dice_roll_basic();
-float dice_roll_average_get();
-int dice_roll_minimum_get();
-int dice_roll_maximum_get();
-void dice_roll_args_print();
-void dice_roll_stats_print();
-int dice_roll();
+int dice_roll_basic(int size_of_die);
+float dice_roll_average_get(struct DiceRollArgs);
+int dice_roll_minimum_get(struct DiceRollArgs);
+int dice_roll_maximum_get(struct DiceRollArgs);
+void dice_roll_args_print(struct DiceRollArgs);
+void dice_roll_stats_print(struct DiceRollArgs);
+int dice_roll(struct DiceRollArgs);

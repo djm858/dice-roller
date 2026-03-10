@@ -21,13 +21,13 @@ struct DiceRollArgs dwrap_roll_args_get(char *roll_exp)
 	                     "(([:*:]|×|[xX])([[:digit:]]+))?$";
 
 	if (rgx_extract(roll_exp, pattern_roll, 1, buffer, sizeof(buffer)) == 0) {
-		if (strnlen(buffer, sizeof(buffer)) > 0) {
+		if (strlen_safe(buffer, sizeof(buffer)) > 0) {
 			number_of_dice = atoi(buffer);
 		}
 	}
 
 	if (rgx_extract(roll_exp, pattern_roll, 3, buffer, sizeof(buffer)) == 0) {
-		if (strnlen(buffer, sizeof(buffer)) > 0) {
+		if (strlen_safe(buffer, sizeof(buffer)) > 0) {
 			if (strcmp(buffer, "%") == 0) {
 				size_of_dice = 100;
 			} else {
@@ -37,13 +37,13 @@ struct DiceRollArgs dwrap_roll_args_get(char *roll_exp)
 	}
 
 	if (rgx_extract(roll_exp, pattern_roll, 4, buffer, sizeof(buffer)) == 0) {
-		if (strnlen(buffer, sizeof(buffer)) > 0) {
+		if (strlen_safe(buffer, sizeof(buffer)) > 0) {
 			mod_total = atoi(buffer);
 		}
 	}
 
 	if (rgx_extract(roll_exp, pattern_roll, 7, buffer, sizeof(buffer)) == 0) {
-		if (strnlen(buffer, sizeof(buffer)) > 0) {
+		if (strlen_safe(buffer, sizeof(buffer)) > 0) {
 			mult = atoi(buffer);
 		}
 	}

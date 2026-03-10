@@ -23,7 +23,7 @@ int dice_roll_basic(int size_of_die)
 {
 	int roll_result;
 
-	roll_result = (random() % size_of_die) + 1;
+	roll_result = (rand() % size_of_die) + 1;
 
 	return roll_result;
 }

@@ -62,6 +62,18 @@ It allows users to provide typical dice roll expressions (such as 2d8+3) and the
         ```
         ![4d6](docs/assets/4d6.png)
 
+    - Roll separate 20-sided dice:
+        ```
+        ./roll d20 d20
+        ```
+        ![Sepd20](docs/assets/Sepd20.png)
+
+    - Roll percentage dice:
+        ```
+        ./roll d%
+        ```
+        ![d%](docs/assets/d%.png)
+
     - Roll damage for a two-handed sword with a Strength modifier of +2:
         ```
         ./roll 1d10+2
@@ -82,7 +94,7 @@ It allows users to provide typical dice roll expressions (such as 2d8+3) and the
 
 ## Uninstall
 
-1. Remove the program with the provided make file from the root directory:
+1. Remove the program with the provided make file from the project directory root:
 
     ```
     make clean
