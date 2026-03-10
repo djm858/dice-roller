@@ -33,7 +33,7 @@ void main_error_print(char *program_name)
 int main(int argc, char *argv[])
 {
 	int i;
-	struct Queue *queue;
+	struct Queue *args;
 	int mod_ea_die = 0;
 	bool verbose = false;
 	enum DiceDrop drop = NONE;
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
 	random_seed_generate();
 
-	queue = queue_new(2);
+	args = queue_new(5);
 
 	for (i = 1; i < argc; i++) {
 		if (strlen_safe(argv[i], ARG_MAX_LENGTH) >= ARG_MAX_LENGTH) {
@@ -55,6 +55,10 @@ int main(int argc, char *argv[])
 		}
 
 		if (strcmp("-d", argv[i]) == 0) {
+			if (i + 1 >= argc) {
+				printf("Need to specify drop 'low' or 'high'.\n");
+				main_error_print(argv[0]);
+			}
 			if (strcmp("low", argv[i + 1]) == 0) {
 				drop = LOWEST;
 				i++;
@@ -66,6 +70,10 @@ int main(int argc, char *argv[])
 				main_error_print(argv[0]);
 			}
 		} else if (strcmp("-m", argv[i]) == 0) {
+			if (i + 1 >= argc) {
+				printf("Must include an integer for a modifier.\n");
+				main_error_print(argv[0]);
+			}
 			if (!rgx_match(argv[i + 1], pattern_mod)) {
 				printf("The modifier for each dice must be an integer.\n");
 				main_error_print(argv[0]);
@@ -75,19 +83,19 @@ int main(int argc, char *argv[])
 		} else if (strcmp("-v", argv[i]) == 0) {
 			verbose = true;
 		} else if (rgx_match(argv[i], pattern_roll)) {
-			queue_push(queue, argv[i]);
+			queue_push(args, argv[i]);
 		} else {
 			printf("Unknown argument.\n");
 			main_error_print(argv[0]);
 		}
 	}
 
-	while (queue->count > 0) {
+	while (args->count > 0) {
 		char *roll_exp;
 		int result;
 		struct DiceRollArgs roll;
 		
-		roll_exp = queue_pop(queue);
+		roll_exp = queue_pop(args);
 		roll = dwrap_roll_args_get(roll_exp);
 		roll.mod_ea_die = mod_ea_die;
 		roll.drop = drop;
@@ -100,7 +108,7 @@ int main(int argc, char *argv[])
 		printf("You rolled %d.\n", result);
 	}
 
-	queue_free(queue);
+	queue_free(args);
 
 	return 0;
 }
